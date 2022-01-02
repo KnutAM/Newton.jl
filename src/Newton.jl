@@ -17,6 +17,8 @@ function NewtonCache(x::AbstractVector, rf!)
     return NewtonCache(result, cfg, lupivot)
 end
 
+get_drdx(cache::NewtonCache) = DiffResults.jacobian(cache.result)
+
 """
     solve!(K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
 
@@ -67,5 +69,6 @@ end
 
 export newtonsolve!
 export NewtonCache
+export get_drdx
 
 end
