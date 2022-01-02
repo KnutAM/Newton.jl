@@ -15,7 +15,6 @@ end
 @testset "newtonsolve!" begin
     nsize = 4
     (a,b,x0) = [rand(nsize) for _ in 1:3]
-    drdx = zeros(nsize, nsize)
     tol = 1.e-10
     
     # Basic functionality
@@ -23,6 +22,9 @@ end
         r .= - a + b.*x + exp.(x)
     end
     x = copy(x0)
+    cache = NewtonCache(x, rf_solution!)
+    drdx = get_drdx(cache)
+    @test size(drdx,1) == nsize
     converged = newtonsolve!(x, drdx, rf_solution!; tol=tol)
     r_check = similar(x0)
     @test converged
