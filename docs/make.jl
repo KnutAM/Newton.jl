@@ -19,5 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
+    devbranch="main",
     repo="github.com/KnutAM/Newton.jl",
 )
