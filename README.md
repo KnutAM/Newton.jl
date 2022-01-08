@@ -11,5 +11,5 @@ Newton.jl provides a fast and efficient newton-raphson solver for nonlinear equa
 
 ## Installation
 ```julia
-Pkg.add("https://github.com/KnutAM/Newton.jl")
+Pkg.add(url="https://github.com/KnutAM/Newton.jl")
 ```
