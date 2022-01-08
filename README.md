@@ -5,9 +5,9 @@
 [![Build Status](https://github.com/KnutAM/Newton.jl/workflows/CI/badge.svg)](https://github.com/KnutAM/Newton.jl/actions)
 [![Coverage](https://codecov.io/gh/KnutAM/Newton.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KnutAM/Newton.jl)
 
+Newton.jl provides an efficient newton-raphson solver for nonlinear equation systems. The main goal is to keep the allocations low and the speed high (duh).
 
-
-Newton.jl provides a fast and efficient newton-raphson solver for nonlinear equation systems. It is suitable to be used inside a preformance critical loop. It is mostly tested for small equations systems (<100 variables). When more fine-grained controlled over algorithms or more iteration information is desired, using [NLsolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is recommended.
+Its purpose is to be used inside a preformance critical loop, and is mostly tested for small equations systems (<100 variables). When more fine-grained controlled over algorithms or more iteration information are desired, [NLsolve](https://github.com/JuliaNLSolvers/NLsolve.jl) has many more options.
 
 ## Installation
 ```julia
