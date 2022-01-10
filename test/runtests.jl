@@ -3,6 +3,13 @@ using Test
 using ForwardDiff
 using LinearAlgebra
 
+multiinput_rf!(r::Vector, x::Vector, A::Matrix, b::Vector) = (r .= b .+ A*x)
+
+function setup_cache(x, A, b)
+    rf!(r, x) = multiinput_rf!(r, x, A, b)
+    return NewtonCache(x, rf!)
+end
+
 @testset "linsolve!" begin
     A = 2*I + rand(10,10)
     b = rand(10)
@@ -37,5 +44,16 @@ end
     x = copy(x0)
     converged = newtonsolve!(x, drdx, rf_nosolution!)
     @test !converged
-        
+    
+    # Test function with different anynomous functions for cache and solving
+    cache = setup_cache(x0, zeros(nsize,nsize), zeros(nsize))   # If these A and b inputs are used, solution is zero
+    A = nsize*I+rand(nsize,nsize)
+    A += transpose(A)   # Symmetrize to ensure invertible
+    b = rand(nsize)
+    
+    rf_solve!(r, x) = multiinput_rf!(r, x, A, b)
+    drdx = get_drdx(cache)
+    @test newtonsolve!(x, drdx, rf_solve!, cache)
+    @test isapprox(rf_solve!(r_check, x), zero(r_check); atol=tol)
+    @test .!(isapprox(x, zero(x); atol=tol))
 end
