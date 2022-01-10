@@ -60,11 +60,12 @@ Solve the nonlinear equation system r(x)=0 using the newton-raphson method. Retu
 function newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::NewtonCache = NewtonCache(x,rf!); tol=1.e-6, max_iter=100)
     diffresult = cache.result
     cfg = cache.config
-    for _ = 1:max_iter
+    for i = 1:max_iter
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
         ForwardDiff.jacobian!(diffresult, rf!, diffresult.value, x, cfg, Val{false}())
         err = norm(DiffResults.value(diffresult))
+        i == 1 && @assert !(typeof(err) <: ForwardDiff.Dual)    # Check that we don't try to differentiate
         if err < tol
             drdx .= DiffResults.jacobian(diffresult)
             return true

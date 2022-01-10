@@ -10,6 +10,14 @@ function setup_cache(x, A, b)
     return NewtonCache(x, rf!)
 end
 
+function determine_solution(A, b)
+    x = zero(b)
+    rf!(r, x) = multiinput_rf!(r, x, A, b)
+    cache=NewtonCache(x, rf!)
+    newtonsolve!(x, get_drdx(cache), rf!, cache)
+    return x
+end
+
 @testset "linsolve!" begin
     A = 2*I + rand(10,10)
     b = rand(10)
@@ -56,4 +64,16 @@ end
     @test newtonsolve!(x, drdx, rf_solve!, cache)
     @test isapprox(rf_solve!(r_check, x), zero(r_check); atol=tol)
     @test .!(isapprox(x, zero(x); atol=tol))
+
+    # Test that error is thrown if we try to use automatic differentiation of the newtonsolve!
+    diff_fun(y) = determine_solution(A, y)
+    failed = false
+    try
+        df = ForwardDiff.jacobian(diff_fun, rand(nsize))
+    catch err
+        failed = true
+    end
+    @test failed
+
 end
+
