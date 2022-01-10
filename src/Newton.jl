@@ -64,17 +64,19 @@ function newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::Newto
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
         ForwardDiff.jacobian!(diffresult, rf!, diffresult.value, x, cfg, Val{false}())
-        err = norm(diffresult.value)
+        err = norm(DiffResults.value(diffresult))
         if err < tol
             drdx .= DiffResults.jacobian(diffresult)
             return true
         end
-        linsolve!(DiffResults.jacobian(diffresult), diffresult.value, cache)
-        x .-= diffresult.value
+        linsolve!(DiffResults.jacobian(diffresult), DiffResults.value(diffresult), cache)
+        x .-= DiffResults.value(diffresult)
     end
     # No convergence
     return false
 end
+
+
 
 export newtonsolve!
 export NewtonCache
