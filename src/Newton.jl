@@ -13,8 +13,8 @@ end
 """
     function NewtonCache(x::AbstractVector, rf!)
     
-    Create the cache used by the `newtonsolve!` and `linsolve!` 
-    to find `x` such that `rf!(r,x)` yields `r=0`.
+Create the cache used by the `newtonsolve!` and `linsolve!` 
+to find `x` such that `rf!(r,x)` yields `r=0`.
 """
 function NewtonCache(x::AbstractVector, rf!)
     result = DiffResults.JacobianResult(x)
