@@ -86,7 +86,7 @@ Solves the linear equation system `drdx*x=r` without mutating and returns the so
 @inline linsolve(drdx::SMatrix{dim,dim}, r::SVector{dim}) where{dim} = drdx\r
 
 """
-    newtonsolve(x::SVector, rf; tol=1.e-6, max_iter=100)
+    newtonsolve(x::SVector, rf; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation system `r(x)=0` using the newton-raphson method.
 Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where 
