@@ -2,6 +2,7 @@ using Newton
 using Test
 using ForwardDiff
 using LinearAlgebra
+using StaticArrays
 
 multiinput_rf!(r::Vector, x::Vector, A::Matrix, b::Vector) = (r .= b .+ A*x)
 
@@ -77,3 +78,29 @@ end
 
 end
 
+@testset "linsolve" begin
+    dim = 5
+    A = rand(SMatrix{dim,dim})
+    x = rand(SVector{dim})
+    b = A*x
+    @test x ≈ Newton.linsolve(A, b)
+end
+
+@testset "newtonsolve" begin
+    dim = 6
+    (a,b,x0) = [rand(SVector{dim}) for _ in 1:3]
+
+    rf_solution(x) = - a + b.*x + exp.(x)
+    rf_nosolution(x) = a .+ b.*x.^2
+
+    converged, x, drdx = newtonsolve(x0, rf_solution; tol=1.e-6)
+    @test converged
+    @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
+    @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
+
+    converged, x, drdx = newtonsolve(x0, rf_nosolution; tol=1.e-6, maxiter=4)
+    @test ~converged
+    @test all(isnan.(x))
+    @test all(isnan.(drdx))
+
+end
