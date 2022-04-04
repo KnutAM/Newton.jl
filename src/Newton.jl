@@ -3,6 +3,7 @@ using LinearAlgebra
 using RecursiveFactorization
 using DiffResults
 using ForwardDiff
+using StaticArrays
 
 struct NewtonCache{Tres,Tcfg}
     result::Tres
@@ -77,9 +78,43 @@ function newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::Newto
     return false
 end
 
+"""
+    linsolve(drdx::SMatrix{dim,dim}, r::SVector{dim}) where{dim}
 
+Solves the linear equation system `drdx*x=r` without mutating and returns the solution x
+"""
+@inline linsolve(drdx::SMatrix{dim,dim}, r::SVector{dim}) where{dim} = drdx\r
 
-export newtonsolve!
+"""
+    newtonsolve(x::SVector, rf; tol=1.e-6, max_iter=100)
+
+Solve the nonlinear equation system `r(x)=0` using the newton-raphson method.
+Return type: `(Bool, SMatrix)` where the `Bool` is `true`` if converged and `false` otherwise
+The `SMatrix` is the jacobian `drdx` where `r(x)=0`
+
+# args
+- `x`: Vector of unknowns. Provide as initial guess, mutated to solution.
+- `rf`: Residual function. Signature `r=rf(x::SVector{dim})::SVector{dim}`
+
+# kwargs
+- `tol=1.e-6`: Tolerance on `norm(r)`
+- `maxiter=100`: Maximum number of iterations before no convergence
+
+"""
+function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, max_iter=100) where{dim}
+    for _ = 1:max_iter
+        r = rf(x)
+        err = norm(r)
+        drdx = ForwardDiff.jacobian(rf, x)
+        if err < tol
+            return true, drdx
+        end
+        x -= linsolve(drdx, r)
+    end
+    return false, zero(SMatrix{dim,dim})*NaN
+end
+    
+export newtonsolve!, newtonsolve
 export NewtonCache
 export get_drdx
 
