@@ -77,25 +77,25 @@ See `benchmarks/benchmark_static.jl`, on my laptop the results are
 ```julia
 include("benchmarks/benchmark_static.jl")
 Benchmark with dim=5
-rf (static):           27.163 ns (0 allocations: 0 bytes)
-rf (dynamic):          30.050 ns (0 allocations: 0 bytes)
-newtonsolve static:    958.333 ns (0 allocations: 0 bytes)
-newtonsolve dynamic:   2.600 μs (9 allocations: 1.22 KiB)
-nlsolve dynamic:       6.600 μs (58 allocations: 6.23 KiB)
+rf (static):           18.637 ns (0 allocations: 0 bytes)
+rf (dynamic):          18.136 ns (0 allocations: 0 bytes)
+newtonsolve static:    600.000 ns (0 allocations: 0 bytes)
+newtonsolve dynamic:   1.500 μs (9 allocations: 1.22 KiB)
+nlsolve dynamic:       4.300 μs (58 allocations: 6.23 KiB)
 
 Benchmark with dim=10
-rf (static):           56.504 ns (0 allocations: 0 bytes)
-rf (dynamic):          55.793 ns (0 allocations: 0 bytes)
-newtonsolve static:    4.037 μs (0 allocations: 0 bytes)
-newtonsolve dynamic:   5.400 μs (5 allocations: 4.38 KiB)
-nlsolve dynamic:       10.400 μs (58 allocations: 12.25 KiB)
+rf (static):           35.247 ns (0 allocations: 0 bytes)
+rf (dynamic):          34.844 ns (0 allocations: 0 bytes)
+newtonsolve static:    2.600 μs (0 allocations: 0 bytes)
+newtonsolve dynamic:   3.100 μs (5 allocations: 4.38 KiB)
+nlsolve dynamic:       6.500 μs (58 allocations: 12.25 KiB)
 
 Benchmark with dim=20
-rf (static):           105.443 ns (0 allocations: 0 bytes)
-rf (dynamic):          109.257 ns (0 allocations: 0 bytes)
-newtonsolve static:    8.433 μs (16 allocations: 14.81 KiB)
-newtonsolve dynamic:   14.800 μs (5 allocations: 4.38 KiB)
-nlsolve dynamic:       25.800 μs (62 allocations: 23.39 KiB)
+rf (static):           68.098 ns (0 allocations: 0 bytes)
+rf (dynamic):          68.275 ns (0 allocations: 0 bytes)
+newtonsolve static:    5.200 μs (16 allocations: 14.81 KiB)
+newtonsolve dynamic:   8.400 μs (5 allocations: 4.38 KiB)
+nlsolve dynamic:       16.400 μs (62 allocations: 23.39 KiB)
 ```
 showing that using StaticArrays will be significantly faster with `newtonsolve`. (`nlsolve` does not  support StaticArrays.)
 

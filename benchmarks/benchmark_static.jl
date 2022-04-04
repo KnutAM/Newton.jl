@@ -39,7 +39,7 @@ function run_benchmark(dims)
 
         # Get time for newtonsolve
         print("newtonsolve static:  ")
-        @btime newtonsolve($x_s, $rf);
+        @btime newtonsolve(x_, $rf) setup=(x_=copy($x_s)) evals=1;
 
         # Get time for newtonsolve!
         # First time setup
