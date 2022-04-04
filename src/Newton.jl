@@ -86,16 +86,16 @@ Solves the linear equation system `drdx*x=r` without mutating and returns the so
 @inline linsolve(drdx::SMatrix{dim,dim}, r::SVector{dim}) where{dim} = drdx\r
 
 """
-    newtonsolve(x::SVector, rf; tol=1.e-6, maxiter=100)
+    newtonsolve(x0::SVector, rf; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation system `r(x)=0` using the newton-raphson method.
 Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where 
-- `converged::Bool` is `true`` if converged and `false` otherwise
+- `converged::Bool` is `true` if converged and `false` otherwise
 - `x::SVector` is the solution vector such that `r(x)=0`
 - `drdx::SMatrix` is the jacobian at `x`
 
 # args
-- `x`: Vector of with initial guess for unknowns.
+- `x0`: Vector of with initial guess for unknowns.
 - `rf`: Residual function. Signature `r=rf(x::SVector{dim})::SVector{dim}`
 
 # kwargs
