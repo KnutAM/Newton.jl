@@ -6,6 +6,7 @@ CurrentModule = Newton
 The goal of the small [Newton.jl](https://github.com/KnutAM/Newton.jl) package is to provide a fast and efficient newton-raphson solver for nonlinear equation systems, suitable to be used inside a preformance critical loop. It is mostly tested for small equations systems (<100 variables). When more fine-grained controlled over algorithms or more iteration information is desired, using [NLsolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is recommended.
 
 ## Basic usage
+### Mutating standard array
 ```julia
 using Newton
 ```
@@ -34,7 +35,7 @@ drdx = get_drdx(cache)  # Alternatively drdx=zeros(nsize,nsize), but this alloca
 converged = newtonsolve!(x, drdx, rf!, cache)
 ```
 
-## Speed and allocation comparison
+### Speed and allocation comparison
 See `benchmarks/benchmark.jl`, on my laptop the results are
 ```julia
 include("benchmarks/benchmark.jl")
@@ -47,6 +48,56 @@ include("benchmarks/benchmark.jl")
 Benchmark (dim=20) complete
 ```
 showing that `newtonsolve!` is approximately 1.75 times faster than the basic usage of `nlsolve` for this particular case.
+
+
+## Using StaticArrays
+```julia
+using Newton
+```
+
+Define a non-mutating residual function
+```julia
+function rf(x::SVector)
+    return exp.(x) - x.^2
+end
+```
+
+Provide an initial guess
+```julia
+x_s = zero(SVector{dim})
+```
+
+Solve the non-linear equation system
+```julia
+converged, drdx = newtonsolve($x_s, $rf);
+```
+
+### Speed comparison
+See `benchmarks/benchmark_static.jl`, on my laptop the results are
+```julia
+include("benchmarks/benchmark_static.jl")
+Benchmark with dim=5
+rf (static):           27.163 ns (0 allocations: 0 bytes)
+rf (dynamic):          30.050 ns (0 allocations: 0 bytes)
+newtonsolve static:    958.333 ns (0 allocations: 0 bytes)
+newtonsolve dynamic:   2.600 μs (9 allocations: 1.22 KiB)
+nlsolve dynamic:       6.600 μs (58 allocations: 6.23 KiB)
+
+Benchmark with dim=10
+rf (static):           56.504 ns (0 allocations: 0 bytes)
+rf (dynamic):          55.793 ns (0 allocations: 0 bytes)
+newtonsolve static:    4.037 μs (0 allocations: 0 bytes)
+newtonsolve dynamic:   5.400 μs (5 allocations: 4.38 KiB)
+nlsolve dynamic:       10.400 μs (58 allocations: 12.25 KiB)
+
+Benchmark with dim=20
+rf (static):           105.443 ns (0 allocations: 0 bytes)
+rf (dynamic):          109.257 ns (0 allocations: 0 bytes)
+newtonsolve static:    8.433 μs (16 allocations: 14.81 KiB)
+newtonsolve dynamic:   14.800 μs (5 allocations: 4.38 KiB)
+nlsolve dynamic:       25.800 μs (62 allocations: 23.39 KiB)
+```
+showing that using StaticArrays will be significantly faster with `newtonsolve`. (`nlsolve` does not  support StaticArrays.)
 
 ## Exported API
 ```@autodocs
