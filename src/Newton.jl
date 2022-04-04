@@ -95,7 +95,7 @@ Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where
 - `drdx::SMatrix` is the jacobian at `x`
 
 # args
-- `x`: Vector of unknowns. Provide as initial guess, mutated to solution.
+- `x`: Vector of with initial guess for unknowns.
 - `rf`: Residual function. Signature `r=rf(x::SVector{dim})::SVector{dim}`
 
 # kwargs
