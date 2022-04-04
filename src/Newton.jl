@@ -43,7 +43,7 @@ function linsolve!(K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
 end
 
 """
-    newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::ResidualCache; tol=1.e-6, max_iter=100)
+    newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::ResidualCache; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation system r(x)=0 using the newton-raphson method. Returns `true` if converged and `false` otherwise.
 
@@ -58,10 +58,10 @@ Solve the nonlinear equation system r(x)=0 using the newton-raphson method. Retu
 - `maxiter=100`: Maximum number of iterations before no convergence
 
 """
-function newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::NewtonCache = NewtonCache(x,rf!); tol=1.e-6, max_iter=100)
+function newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::NewtonCache = NewtonCache(x,rf!); tol=1.e-6, maxiter=100)
     diffresult = cache.result
     cfg = cache.config
-    for i = 1:max_iter
+    for i = 1:maxiter
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
         ForwardDiff.jacobian!(diffresult, rf!, diffresult.value, x, cfg, Val{false}())
@@ -89,8 +89,10 @@ Solves the linear equation system `drdx*x=r` without mutating and returns the so
     newtonsolve(x::SVector, rf; tol=1.e-6, max_iter=100)
 
 Solve the nonlinear equation system `r(x)=0` using the newton-raphson method.
-Return type: `(Bool, SMatrix)` where the `Bool` is `true`` if converged and `false` otherwise
-The `SMatrix` is the jacobian `drdx` where `r(x)=0`
+Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where 
+- `converged::Bool` is `true`` if converged and `false` otherwise
+- `x::SVector` is the solution vector such that `r(x)=0`
+- `drdx::SMatrix` is the jacobian at `x`
 
 # args
 - `x`: Vector of unknowns. Provide as initial guess, mutated to solution.
@@ -101,17 +103,17 @@ The `SMatrix` is the jacobian `drdx` where `r(x)=0`
 - `maxiter=100`: Maximum number of iterations before no convergence
 
 """
-function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, max_iter=100) where{dim}
-    for _ = 1:max_iter
+function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
+    for _ = 1:maxiter
         r = rf(x)
         err = norm(r)
         drdx = ForwardDiff.jacobian(rf, x)
         if err < tol
-            return true, drdx
+            return true, x, drdx
         end
         x -= linsolve(drdx, r)
     end
-    return false, zero(SMatrix{dim,dim})*NaN
+    return false, zero(SVector{dim})*NaN, zero(SMatrix{dim,dim})*NaN
 end
     
 export newtonsolve!, newtonsolve

@@ -67,9 +67,9 @@ Provide an initial guess
 x_s = zero(SVector{dim})
 ```
 
-Solve the non-linear equation system
+Find the `x` that solves the non-linear equation system `r(x)=0`, as well as the jacobian `drdx` at that `x`,
 ```julia
-converged, drdx = newtonsolve($x_s, $rf);
+converged, x, drdx = newtonsolve($x_s, $rf);
 ```
 
 ### Speed comparison
