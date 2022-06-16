@@ -12,10 +12,10 @@ function setup_cache(x, A, b)
 end
 
 function determine_solution(A, b)
-    x = zero(b)
+    x0 = zero(b)
     rf!(r, x) = multiinput_rf!(r, x, A, b)
-    cache=NewtonCache(x, rf!)
-    newtonsolve!(x, get_drdx(cache), rf!, cache)
+    cache=NewtonCache(x0, rf!)
+    x, _, _ = newtonsolve(x0, rf!, cache)
     return x
 end
 
@@ -28,7 +28,7 @@ end
     @test A1\b1 ≈ Newton.linsolve!(A2, b2, NewtonCache(b, rf!))
 end
 
-@testset "newtonsolve!" begin
+@testset "newtonsolve (dynamic)" begin
     nsize = 4
     (a,b,x0) = [rand(nsize) for _ in 1:3]
     tol = 1.e-10
@@ -37,21 +37,27 @@ end
     function rf_solution!(r, x)
         r .= - a + b.*x + exp.(x)
     end
-    x = copy(x0)
-    cache = NewtonCache(x, rf_solution!)
-    drdx = get_drdx(cache)
-    @test size(drdx,1) == nsize
-    converged = newtonsolve!(x, drdx, rf_solution!; tol=tol)
+    cache = NewtonCache(x0, rf_solution!)
+    @test x0 !== getx(cache) # Check that x0 is not aliased to getx(cache)
+    xguess = getx(cache)
+    copy!(xguess, x0)
+    x, drdx, converged = newtonsolve(xguess, rf_solution!; tol=tol)
     r_check = similar(x0)
+    @test x0 == xguess     # Input should not be modified when not aliased
     @test converged
     @test isapprox(rf_solution!(r_check, x), zero(r_check); atol=tol)
     @test drdx ≈ ForwardDiff.jacobian(rf_solution!, r_check, x)
+
+    # Test with given cache
+    copy!(getx(cache), x0)
+    x, drdx, converged = newtonsolve(getx(cache), rf_solution!, cache; tol=tol)
+    @test x === getx(cache) # Output should be aliased to cache
 
     function rf_nosolution!(r, x)
         r .= a .+ b.*x.^2
     end
     x = copy(x0)
-    converged = newtonsolve!(x, drdx, rf_nosolution!)
+    x, drdx, converged = newtonsolve(x, rf_nosolution!)
     @test !converged
     
     # Test function with different anynomous functions for cache and solving
@@ -61,8 +67,8 @@ end
     b = rand(nsize)
     
     rf_solve!(r, x) = multiinput_rf!(r, x, A, b)
-    drdx = get_drdx(cache)
-    @test newtonsolve!(x, drdx, rf_solve!, cache)
+    x, drdx, converged = newtonsolve(x, rf_solve!, cache)
+    @test converged
     @test isapprox(rf_solve!(r_check, x), zero(r_check); atol=tol)
     @test .!(isapprox(x, zero(x); atol=tol))
 
@@ -78,27 +84,19 @@ end
 
 end
 
-@testset "linsolve" begin
-    dim = 5
-    A = rand(SMatrix{dim,dim})
-    x = rand(SVector{dim})
-    b = A*x
-    @test x ≈ Newton.linsolve(A, b)
-end
-
-@testset "newtonsolve" begin
+@testset "newtonsolve (static)" begin
     dim = 6
     (a,b,x0) = [rand(SVector{dim}) for _ in 1:3]
 
     rf_solution(x) = - a + b.*x + exp.(x)
     rf_nosolution(x) = a .+ b.*x.^2
 
-    converged, x, drdx = newtonsolve(x0, rf_solution; tol=1.e-6)
+    x, drdx, converged = newtonsolve(x0, rf_solution; tol=1.e-6)
     @test converged
     @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
     @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
 
-    converged, x, drdx = newtonsolve(x0, rf_nosolution; tol=1.e-6, maxiter=4)
+    x, drdx, converged = newtonsolve(x0, rf_nosolution; tol=1.e-6, maxiter=4)
     @test ~converged
     @test all(isnan.(x))
     @test all(isnan.(drdx))
