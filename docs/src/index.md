@@ -13,7 +13,7 @@ using Newton
 ```
 
 ## Typical usage
-### Mutating standard array
+### Mutating (standard) `Array`
 
 **Initial setup** (before running simulation): 
 Define a mutating residual function `rf!` which depends on 
@@ -42,7 +42,7 @@ x, drdx, converged = newtonsolve!(x0, true_rf!, cache)
 ```
 It is not necessary to get `x0` from the cache, but this avoids allocating it. However, this implies that `x0` will be aliased to the output, i.e. `x0===x` after solving. 
 
-### Using StaticArrays
+### Non-mutating `StaticArray`
 **Initial setup** (before running simulation): 
 When using static arrays, the residual function should be non-mutating, i.e. 
 ```julia
@@ -63,7 +63,7 @@ which as in the mutatable array case returns a the solution
 vector, the jacobian at the solution and a boolean whether 
 the solver converged or not. 
 
-### Speed comparison
+## Benchmarks
 See `benchmarks/benchmark.jl`, on my laptop the results are
 ```julia
 pkg> activate benchmarks/
