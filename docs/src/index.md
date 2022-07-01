@@ -38,7 +38,7 @@ a, b = rand(2); # However they are calculated during simulations
 true_rf!(r_, x_) = rf!(r_, x_, a, b)
 x0 = getx(cache)
 # Modify x0 as you wish to provide initial guess
-x, drdx, converged = newtonsolve!(x0, true_rf!, cache)
+x, drdx, converged = newtonsolve(x0, true_rf!, cache)
 ```
 It is not necessary to get `x0` from the cache, but this avoids allocating it. However, this implies that `x0` will be aliased to the output, i.e. `x0===x` after solving. 
 

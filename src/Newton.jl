@@ -46,13 +46,13 @@ function linsolve!(K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
 end
 
 """
-    newtonsolve!(x::AbstractVector, drdx::AbstractMatrix, rf!, cache::ResidualCache; tol=1.e-6, maxiter=100)
+    newtonsolve(x0::AbstractVector, drdx::AbstractMatrix, rf!, cache::ResidualCache; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation system r(x)=0 using the newton-raphson method. 
 Returns `x, drdx, true` if converged and `x, drdx, false` otherwise.
 
 # args
-- `x0`: Initial guess. (If aliased to `getx(cache)` it will be mutated.)
+- `x0`: Initial guess, not mutated (Unless aliased to `getx(cache)`)
 - `rf!`: Residual function. Signature `rf!(r, x)` and mutating the residual `r`
 - `cache`: Optional cache that can be preallocated by calling `ResidualCache(x0, rf!)`
 
