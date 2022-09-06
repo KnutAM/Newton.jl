@@ -100,7 +100,22 @@ end
     @test ~converged
     @test all(isnan.(x))
     @test all(isnan.(drdx))
+end
 
+@testset "newtonsolve (scalar)" begin
+    a, x0 = rand(2)
+    rf_solution(x) = a*x^3 - 1.0
+    rf_nosolution(x) = a*x^4 + 1.0
+
+    x, drdx, converged = newtonsolve(x0, rf_solution)
+    @test converged
+    @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
+    @test drdx ≈ ForwardDiff.derivative(rf_solution, x)
+
+    x, drdx, converged = newtonsolve(x0, rf_nosolution)
+    @test !converged 
+    @test x ≈ zero(x)
+    @test drdx ≈ zero(drdx)
 end
 
 @testset "Multithreaded" begin

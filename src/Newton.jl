@@ -118,6 +118,19 @@ function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
     return zero(SVector{dim})*NaN, zero(SMatrix{dim,dim})*NaN, false
 end
     
+function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
+    for _ = 1:maxiter
+        r = rf(x)
+        err = norm(r)
+        drdx = ForwardDiff.derivative(rf, x)
+        if err < tol 
+            return x, drdx, true
+        end
+        x -= r/drdx
+    end
+    return zero(x), zero(x), false
+end
+
 export newtonsolve
 export NewtonCache
 export getx
