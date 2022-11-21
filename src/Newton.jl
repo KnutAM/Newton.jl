@@ -66,22 +66,23 @@ function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x
     x = getx(cache)
     copy!(x, x0)
     cfg = cache.config
+    drdx = DiffResults.jacobian(diffresult)
+    r = DiffResults.value(diffresult)
     for i = 1:maxiter
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
-        ForwardDiff.jacobian!(diffresult, rf!, diffresult.value, x, cfg, Val{false}())
-        err = norm(DiffResults.value(diffresult))
+        ForwardDiff.jacobian!(diffresult, rf!, r, x, cfg, Val{false}())
+        err = norm(r)
         # Check that we don't try to differentiate:
         i == 1 && check_no_dual(err)
         if err < tol
-            drdx = DiffResults.jacobian(diffresult)
             return x, drdx, true
         end
-        linsolve!(DiffResults.jacobian(diffresult), DiffResults.value(diffresult), cache)
-        x .-= DiffResults.value(diffresult)
+        linsolve!(drdx, r, cache)
+        x .-= r # Note: r mutated to drdx\r
     end
     # No convergence
-    return x, DiffResults.jacobian(diffresult), false
+    return x, drdx, false
 end
 
 check_no_dual(::Number) = nothing
@@ -106,6 +107,7 @@ Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where
 
 """
 function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
+    local drdx
     for _ = 1:maxiter
         r = rf(x)
         err = norm(r)
@@ -115,10 +117,11 @@ function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
         end
         x -= drdx\r
     end
-    return zero(SVector{dim})*NaN, zero(SMatrix{dim,dim})*NaN, false
+    return x, drdx, false
 end
     
 function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
+    local drdx
     for _ = 1:maxiter
         r = rf(x)
         err = norm(r)
@@ -128,7 +131,7 @@ function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
         end
         x -= r/drdx
     end
-    return zero(x), zero(x), false
+    return x, drdx, false
 end
 
 export newtonsolve

@@ -66,6 +66,7 @@ end
     A += transpose(A)   # Symmetrize to ensure invertible
     b = rand(nsize)
     
+    x = copy(x0)
     rf_solve!(r, x) = multiinput_rf!(r, x, A, b)
     x, drdx, converged = newtonsolve(x, rf_solve!, cache)
     @test converged
@@ -86,36 +87,44 @@ end
 
 @testset "newtonsolve (static)" begin
     dim = 6
-    (a,b,x0) = [rand(SVector{dim}) for _ in 1:3]
+    for T in (Float32,Float64)    
+        (a,b,x0) = [rand(SVector{dim,T}) for _ in 1:3]
 
-    rf_solution(x) = - a + b.*x + exp.(x)
-    rf_nosolution(x) = a .+ b.*x.^2
+        rf_solution(x) = - a + b.*x + exp.(x)
+        rf_nosolution(x) = a .+ b.*x.^2
 
-    x, drdx, converged = newtonsolve(x0, rf_solution; tol=1.e-6)
-    @test converged
-    @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
-    @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
+        x, drdx, converged = newtonsolve(x0, rf_solution; tol=1.e-6)
+        @test converged
+        @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
+        @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
+        @test isa(first(x), T)
+        @test isa(first(drdx), T)
 
-    x, drdx, converged = newtonsolve(x0, rf_nosolution; tol=1.e-6, maxiter=4)
-    @test ~converged
-    @test all(isnan.(x))
-    @test all(isnan.(drdx))
+        x, drdx, converged = newtonsolve(x0, rf_nosolution; tol=1.e-6, maxiter=4)
+        @test ~converged
+        @test isa(first(x),T)
+        @test isa(first(drdx), T)
+    end
 end
 
 @testset "newtonsolve (scalar)" begin
-    a, x0 = rand(2)
-    rf_solution(x) = a*x^3 - 1.0
-    rf_nosolution(x) = a*x^4 + 1.0
+    for T in (Float32, Float64)    
+        a, x0 = rand(T,2)
+        rf_solution(x) = a*x^3 - one(T)
+        rf_nosolution(x) = a*x^4 + one(T)
 
-    x, drdx, converged = newtonsolve(x0, rf_solution)
-    @test converged
-    @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
-    @test drdx ≈ ForwardDiff.derivative(rf_solution, x)
+        x, drdx, converged = newtonsolve(x0, rf_solution)
+        @test converged
+        @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
+        @test drdx ≈ ForwardDiff.derivative(rf_solution, x)
+        @test isa(x, T)
+        @test isa(drdx, T)
 
-    x, drdx, converged = newtonsolve(x0, rf_nosolution)
-    @test !converged 
-    @test x ≈ zero(x)
-    @test drdx ≈ zero(drdx)
+        x, drdx, converged = newtonsolve(x0, rf_nosolution)
+        @test !converged 
+        @test isa(x, T)
+        @test isa(drdx, T)
+    end
 end
 
 @testset "Multithreaded" begin
