@@ -6,6 +6,8 @@ using StaticArrays
 
 LinearAlgebra.BLAS.set_num_threads(1) # Otherwise very slow...
 
+rf(x::Number) = exp(x) - x^2
+
 function rf(x::SVector)
     return exp.(x) - x.^2
 end
@@ -43,5 +45,11 @@ function run_benchmark(dim)
 
     println("")
 end
+
+x = 0.0
+print("rf (scalar):         ")
+@btime rf($x)
+print("newtonsolve scalar:  ")
+@btime newtonsolve($x, $rf)    
 
 run_benchmark.([5,10,20,40])
