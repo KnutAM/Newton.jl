@@ -34,19 +34,29 @@ else
     end
 end
 
-function show_iteration_trace(errs::Vector)
-    println("Did not convergen in $(length(errs)) iteration, residual = $(last(errs))")
+function show_iteration_trace(errs::Vector, resids, tol)
+    niter = length(errs)
+    println("Did not converge in $niter iterations")
+    println("Residual = $(last(errs)), tolerance = $tol")
+    if !isnothing(resids)
+        for k in unique((1,min(2,niter),niter))
+            println("Each residual entry at iteration $k/$niter, |r|=$(norm(resids[k])) / $(errs[k])")
+            for (i, r) in enumerate(resids[k])
+                @printf("%2.0f: %10.3e\n", i, r)
+            end
+        end
+    end
     # Rate of convergence, q: |rₖ₋₁|/|rₖ₋₂|^q = μ
     # Hence, q log(|rₖ₋₂|) + log(μ) = log(|rₖ₋₁|)
     # And as well, q log(|rₖ₋₁|) + log(μ) = log(|rₖ|)
     # Such that q = log(|rₖ₋₁|/|rₖ|)/log(|rₖ₋₂|/|rₖ₋₁|)
+    println("iter: |r|, [convergence rate]")
     for k in eachindex(errs)
-        print("$k: $(errs[i])")
+        @printf("%4.0f: %10.3e", k, errs[k])
         if k>=3
             q = log(errs[k-1]/errs[k])/log(errs[k-2]/errs[k-1])
-            println(" q=$q")
-        else
-            println()
+            @printf(", %4.2f", q)
         end
+        println()
     end
 end
