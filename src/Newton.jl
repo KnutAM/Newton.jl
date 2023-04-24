@@ -49,20 +49,17 @@ function linsolve!(K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
 end
 
 """
-    newtonsolve(x0::AbstractVector, drdx::AbstractMatrix, rf!, cache::ResidualCache; tol=1.e-6, maxiter=100)
+    newtonsolve(x0::AbstractVector, rf!, [cache::NewtonCache]; tol=1.e-6, maxiter=100)
 
-Solve the nonlinear equation system r(x)=0 using the newton-raphson method. 
-Returns `x, drdx, true` if converged and `x, drdx, false` otherwise.
+Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
+the mutating residual function `rf!(r, x)`, with signature `rf!(r::T, x::T)::T where T<:AbstractVector`
+`x0` is the initial guess and the optional `cache` can be preallocated by calling `NewtonCache(x0,rf!)`.
+Note that `x0` is not modified, unless aliased to `getx(cache)`. 
+`tol` is the tolerance for `norm(r)` and `maxiter` the maximum number of iterations. 
 
-# args
-- `x0`: Initial guess, not mutated (Unless aliased to `getx(cache)`)
-- `rf!`: Residual function. Signature `rf!(r, x)` and mutating the residual `r`
-- `cache`: Optional cache that can be preallocated by calling `ResidualCache(x0, rf!)`
+returns `x, drdx, converged::Bool`
 
-# kwargs
-- `tol=1.e-6`: Tolerance on `norm(r)`
-- `maxiter=100`: Maximum number of iterations before no convergence
-
+`drdx` is the derivative of r wrt. x at the returned `x`.
 """
 function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x0,rf!); tol=1.e-6, maxiter=100)
     diffresult = cache.result
@@ -97,22 +94,16 @@ check_no_dual(::Number) = nothing
 check_no_dual(::ForwardDiff.Dual) = throw(ArgumentError("newtonsolve cannot be differentiated"))
 
 """
-    newtonsolve(x0::SVector, rf; tol=1.e-6, maxiter=100)
+    newtonsolve(x0::Union{SVector,Number}, rf; tol=1.e-6, maxiter=100)
 
-Solve the nonlinear equation system `r(x)=0` using the newton-raphson method.
-Returns type: `(converged, x, drdx)`, SVector, SMatrix)` where 
-- `converged::Bool` is `true` if converged and `false` otherwise
-- `x::SVector` is the solution vector such that `r(x)=0`
-- `drdx::SMatrix` is the jacobian at `x`
+Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
+the residual function `r=rf(x)`, with signature `rf(x::T)::T where T<:Union{SVector,Number}`.
+`x0` is the initial guess, `tol` the tolerance form `norm(r)`, and `maxiter` the maximum number 
+of iterations. 
 
-# args
-- `x0`: Vector of with initial guess for unknowns.
-- `rf`: Residual function. Signature `r=rf(x::SVector{dim})::SVector{dim}`
+returns: `x, drdx, converged::Bool`
 
-# kwargs
-- `tol=1.e-6`: Tolerance on `norm(r)`
-- `maxiter=100`: Maximum number of iterations before no convergence
-
+`drdx` is the derivative of r wrt. x at the returned `x`.
 """
 function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
     local drdx
