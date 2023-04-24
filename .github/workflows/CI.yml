@@ -36,11 +36,16 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
+      - run: | 
+          julia --project=. -e '
+            using Newton
+            Newton.logging_mode(;enable=true)'
+        shell: bash
       - uses: julia-actions/julia-runtest@v1
       - run: | 
           julia --project=. -e '
             using Newton
-            logging_mode(;enable=true)'
+            Newton.logging_mode(;enable=false)'
         shell: bash
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
