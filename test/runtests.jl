@@ -4,6 +4,8 @@ using ForwardDiff
 using LinearAlgebra
 using StaticArrays
 
+include("test_logging.jl")
+
 multiinput_rf!(r::Vector, x::Vector, A::Matrix, b::Vector) = (r .= b .+ A*x)
 
 function setup_cache(x, A, b)
