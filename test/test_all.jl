@@ -1,6 +1,6 @@
 using Newton
 
-Newton.logging(;enable=true)
-run(`julia -i -e 'using Pkg; Pkg.activate("."); Pkg.test()'`)
-Newton.logging(;enable=false)
-run(`julia -i -e 'using Pkg; Pkg.activate("."); Pkg.test()'`)
+Newton.logging_mode(;enable=true)
+run(`julia -e 'using Pkg; Pkg.activate("."); Pkg.test()'`)
+Newton.logging_mode(;enable=false)
+run(`julia -e 'using Pkg; Pkg.activate("."); Pkg.test()'`)
