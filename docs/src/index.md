@@ -3,7 +3,16 @@ CurrentModule = Newton
 ```
 
 # Newton
-The goal of the small [Newton.jl](https://github.com/KnutAM/Newton.jl) package is to provide a fast and efficient newton-raphson solver for nonlinear equation systems, suitable to be used inside a preformance critical loop. A key feature is that the jacobian at the solution is returned. It is mostly tested for small equations systems (<100 variables). When more fine-grained controlled over algorithms or more iteration information is desired, using [NLsolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is recommended.
+[Newton.jl](https://github.com/KnutAM/Newton.jl) provides a fast and efficient newton-raphson 
+solver that is suitable to be used inside a preformance critical loop. 
+
+* [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) is used for the differentiation.
+* [`RecursiveFactorization`](https://github.com/JuliaLinearAlgebra/RecursiveFactorization.jl) is used for LU-factorization of regular matrices
+* [`StaticArrays.jl`](https://github.com/JuliaArrays/StaticArrays.jl/) are also supported
+
+A logging mode can be enabled, see [`Newton.logging_mode`](@ref). 
+When more fine-grained controlled, different algorithms etc. is desired, 
+consider [NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/). 
 
 ## Installation
 ```julia
@@ -103,15 +112,3 @@ newtonsolve dynamic:   53.200 μs (5 allocations: 4.38 KiB)
 nlsolve dynamic:       83.400 μs (67 allocations: 55.67 KiB)
 ```
 showing that static arrays are faster than dynamic arrays with `newtonsolve` and that `newtonsolve` outperforms `nlsolve` in these specific cases. (`nlsolve` does not  support StaticArrays.)
-
-## Exported API
-```@docs
-newtonsolve
-NewtonCache
-getx
-```
-
-## Internal API
-```@docs
-Newton.linsolve!
-```

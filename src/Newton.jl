@@ -4,6 +4,9 @@ using RecursiveFactorization
 using DiffResults
 using ForwardDiff
 using StaticArrays
+using Printf
+
+include("utils.jl")
 
 struct NewtonCache{T,Tres,Tcfg}
     x::Vector{T}
@@ -65,11 +68,15 @@ function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x
     cfg = cache.config
     drdx = DiffResults.jacobian(diffresult)
     r = DiffResults.value(diffresult)
+    @if_logging errs = zeros(maxiter)
+    @if_logging resids = Vector{Float64}[]
     for i = 1:maxiter
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
         ForwardDiff.jacobian!(diffresult, rf!, r, x, cfg, Val{false}())
         err = norm(r)
+        @if_logging errs[i] = err
+        @if_logging push!(resids, copy(r))
         # Check that we don't try to differentiate:
         i == 1 && check_no_dual(err)
         if err < tol
@@ -79,6 +86,7 @@ function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x
         x .-= r # Note: r mutated to drdx\r
     end
     # No convergence
+    @if_logging show_iteration_trace(errs, resids, tol)
     return x, drdx, false
 end
 
@@ -99,29 +107,37 @@ returns: `x, drdx, converged::Bool`
 """
 function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
     local drdx
-    for _ = 1:maxiter
+    @if_logging errs = zeros(maxiter)
+    @if_logging resids = Vector{Float64}[]
+    for i = 1:maxiter
         r = rf(x)
         err = norm(r)
+        @if_logging errs[i] = err
+        @if_logging push!(resids, r)
         drdx = ForwardDiff.jacobian(rf, x)
         if err < tol
             return x, drdx, true
         end
         x -= drdx\r
     end
+    @if_logging show_iteration_trace(errs, resids, tol)
     return x, drdx, false
 end
     
 function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
     local drdx
-    for _ = 1:maxiter
+    @if_logging errs = zeros(maxiter)
+    for i = 1:maxiter
         r = rf(x)
         err = norm(r)
+        @if_logging errs[i] = err
         drdx = ForwardDiff.derivative(rf, x)
         if err < tol 
             return x, drdx, true
         end
         x -= r/drdx
     end
+    @if_logging show_iteration_trace(errs, nothing, tol)
     return x, drdx, false
 end
 
