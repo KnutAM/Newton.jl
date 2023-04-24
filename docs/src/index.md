@@ -13,7 +13,11 @@ using Newton
 ```
 
 ## Typical usage
-`x, drdx, converged = newtonsolve(x::Union{Real,SVector,Vector}, rf::Function)`
+Solve `r(x)=0` by calling
+
+* `x, drdx, converged = newtonsolve(x::Vector, rf!::Function, cache)`
+* `x, drdx, converged = newtonsolve(x::Union{Real,SVector}, rf::Function)`
+
 
 ### Mutating (standard) `Array`
 
@@ -108,6 +112,6 @@ getx
 ```
 
 ## Internal API
-```@autodocs
+```@docs
 Newton.linsolve!
 ```
