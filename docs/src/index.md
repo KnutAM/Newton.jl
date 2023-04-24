@@ -13,6 +13,8 @@ using Newton
 ```
 
 ## Typical usage
+`x, drdx, converged = newtonsolve(x::Union{Real,SVector,Vector}, rf::Function)`
+
 ### Mutating (standard) `Array`
 
 **Initial setup** (before running simulation): 
@@ -99,13 +101,13 @@ nlsolve dynamic:       83.400 μs (67 allocations: 55.67 KiB)
 showing that static arrays are faster than dynamic arrays with `newtonsolve` and that `newtonsolve` outperforms `nlsolve` in these specific cases. (`nlsolve` does not  support StaticArrays.)
 
 ## Exported API
-```@autodocs
-Modules = [Newton]
-Private = false
+```@docs
+newtonsolve
+NewtonCache
+getx
 ```
 
 ## Internal API
 ```@autodocs
-Modules = [Newton]
-Public = false
+Newton.linsolve!
 ```
