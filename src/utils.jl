@@ -4,19 +4,18 @@ import Preferences
 const LOGGING = Preferences.@load_preference("log_iterations", false)
 
 """
-    Newton.debug_mode(; enable=true)
+    Newton.logging_mode(; enable=true)
 Helper to turn on (`enable=true`) or off (`enable=false`) logging of iterations in `Newton.jl`.
 Internally, changes the how `Newton.@if_logging expr` is evaluated: 
 when logging mode is enabled, `expr` is evaluated, otherwise `expr` is ignored.
 """
 function logging_mode(; enable = true)
-    if LOGGING == enable == true
-        @info "Logging mode already enabled."
-    elseif LOGGING == enable == false
-        @info "Logging mode already disabled."
+    Preferences.@set_preferences!("log_iterations" => enable)
+    @info "Logging mode $(enable ? "en" : "dis")abled."
+    if LOGGING == enable
+        @info "Logging mode did not change though"
     else
-        Preferences.@set_preferences!("log_iterations" => enable)
-        @info "Logging mode $(enable ? "en" : "dis")abled. Restart the Julia session for this change to take effect!"
+        @info "Logging mode changed: Restart the Julia session for this change to take effect!"
     end
 end
 
