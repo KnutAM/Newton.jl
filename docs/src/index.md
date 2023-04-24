@@ -11,8 +11,8 @@ solver that is suitable to be used inside a preformance critical loop.
 * [`StaticArrays.jl`](https://github.com/JuliaArrays/StaticArrays.jl/) are also supported
 
 A logging mode can be enabled, see [`Newton.logging_mode`](@ref). 
-When more fine-grained controlled over algorithms or more iteration information is desired, 
-using [NLsolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is recommended.
+When more fine-grained controlled, different algorithms etc. is desired, 
+consider [NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/). 
 
 ## Installation
 ```julia
