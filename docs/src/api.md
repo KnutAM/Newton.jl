@@ -7,6 +7,7 @@ CurrentModule = Newton
 newtonsolve
 NewtonCache
 getx
+Newton.inv!
 Newton.logging_mode
 ```
 
