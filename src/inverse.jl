@@ -13,10 +13,10 @@ end
 
 _inv!(A::LU, ::NewtonCache) = LinearAlgebra.inv!(A)
 
-# The following optimization only works on 1.9
+# The following optimization only works on Julia 1.9 or later
 import LinearAlgebra as LA
 
-@static if VERSION > v"1.9"
+@static if VERSION ≥ v"1.9"
 
     function _inv!(A::LU{T,<:StridedMatrix}, cache::NewtonCache{T}) where {T<:Float64}
         Adata = getproperty(A, :factors)

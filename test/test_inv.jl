@@ -6,13 +6,15 @@
             Ainv = inv(A)
             Ainv2 = Newton.inv!(A, cache)
             @test Ainv ≈ Ainv2
-            lwork = length(cache.blas_work)
-            if T===Float64 # Test that it has resized correctly
-                @test lwork ≥ n
+            if VERSION ≥ v"1.9" # Functionality only active on julia 1.9 and later
+                lwork = length(cache.blas_work)
+                if T===Float64 # Test that it has resized correctly
+                    @test lwork ≥ n
+                end
+                # Check that blas_work doesn't resize when called multiple times
+                Newton.inv!(A, cache)
+                @test lwork == length(cache.blas_work) 
             end
-            # Check that blas_work doesn't resize when called multiple times
-            Newton.inv!(A, cache)
-            @test lwork == length(cache.blas_work) 
         end
     end
 end
