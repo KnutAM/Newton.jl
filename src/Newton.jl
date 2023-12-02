@@ -13,6 +13,7 @@ struct NewtonCache{T,Tres,Tcfg}
     result::Tres
     config::Tcfg
     lupivot::Vector{Int}
+    blas_work::Vector{T}
 end
 
 include("inverse.jl")
@@ -27,7 +28,7 @@ function NewtonCache(x::AbstractVector, rf!)
     result = DiffResults.JacobianResult(x)
     cfg = ForwardDiff.JacobianConfig(rf!, x, result.value, ForwardDiff.Chunk(length(x)))
     lupivot = Vector{Int}(undef, length(x))
-    return NewtonCache(copy(x), result, cfg, lupivot)
+    return NewtonCache(copy(x), result, cfg, lupivot, zeros(eltype(x),0))
 end
 
 """

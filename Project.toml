@@ -1,7 +1,7 @@
 name = "Newton"
 uuid = "83aa5b51-0588-403c-85e4-434ec185aae7"
 authors = ["Knut Andreas Meyer and contributors"]
-version = "0.1.5"
+version = "0.1.6"
 
 [deps]
 DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
