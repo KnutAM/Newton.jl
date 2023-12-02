@@ -64,7 +64,7 @@ returns `x, drdx, converged::Bool`
 function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x0,rf!); tol=1.e-6, maxiter=100)
     diffresult = cache.result
     x = getx(cache)
-    copy!(x, x0)
+    copyto!(x, x0)
     cfg = cache.config
     drdx = DiffResults.jacobian(diffresult)
     r = DiffResults.value(diffresult)
@@ -73,12 +73,14 @@ function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x
     for i = 1:maxiter
         # Disable checktag using Val{false}(). solve_residual should never be differentiated using dual numbers! 
         # This is required when using a different (but equivalent) anynomus function for caching than for running.
-        ForwardDiff.jacobian!(diffresult, rf!, r, x, cfg, Val{false}())
+        # Note that this shows up as dynamic dispatch within chunk_mode_jacobian, but doesn't affect allocations/performance.
+        ForwardDiff.jacobian!(diffresult, rf!, r, x, cfg, Val(false))
         err = norm(r)
+
         @if_logging errs[i] = err
         @if_logging push!(resids, copy(r))
-        # Check that we don't try to differentiate:
-        i == 1 && check_no_dual(err)
+
+        check_no_dual(err) # Check that we don't try to differentiate (gets compiled away for type-stable code)
         if err < tol
             return x, drdx, true
         end
@@ -90,8 +92,8 @@ function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x
     return x, drdx, false
 end
 
-check_no_dual(::Number) = nothing
-check_no_dual(::ForwardDiff.Dual) = throw(ArgumentError("newtonsolve cannot be differentiated"))
+@inline check_no_dual(::Number) = nothing
+@inline check_no_dual(::ForwardDiff.Dual) = throw(ArgumentError("newtonsolve cannot be differentiated"))
 
 """
     newtonsolve(x0::Union{SVector,Number}, rf; tol=1.e-6, maxiter=100)
