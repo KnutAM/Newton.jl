@@ -15,6 +15,8 @@ struct NewtonCache{T,Tres,Tcfg}
     lupivot::Vector{Int}
 end
 
+include("inverse.jl")
+
 """
     function NewtonCache(x::AbstractVector, rf!)
     

@@ -5,6 +5,7 @@ using LinearAlgebra
 using StaticArrays
 
 include("test_logging.jl")
+include("test_inv.jl")
 
 multiinput_rf!(r::Vector, x::Vector, A::Matrix, b::Vector) = (r .= b .+ A*x)
 
