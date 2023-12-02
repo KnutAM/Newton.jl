@@ -13,50 +13,52 @@ end
 
 _inv!(A::LU, ::NewtonCache) = LinearAlgebra.inv!(A)
 
-function _inv!(A::LU{T,<:StridedMatrix}, cache::NewtonCache{T}) where {T<:Float64}
-    Adata = getproperty(A, :factors)
-    ipiv = getproperty(A, :ipiv)
-    return lapack_getri!(Adata, ipiv, cache.blas_work)
-end
+# The following optimization only works on 1.9
+import LinearAlgebra as LA
 
-import LinearAlgebra: libblastrampoline, require_one_based_indexing, BlasInt, chkstride1, checksquare
-import LinearAlgebra.BLAS: @blasfunc
-import LinearAlgebra.LAPACK: chklapackerror
+@static if VERSION > v"1.9"
 
-# Code from LinearAlgebra/src/lapack.jl, adjusted to allow work::Vector as input 
-function lapack_getri!(A::AbstractMatrix{T}, ipiv::AbstractVector{BlasInt}, work::Vector{T}) where {T<:Float64} 
-    require_one_based_indexing(A, ipiv)
-    chkstride1(A, ipiv)
-    n = checksquare(A)
-    if n != length(ipiv)
-        throw(DimensionMismatch("ipiv has length $(length(ipiv)), but needs $n"))
+    function _inv!(A::LU{T,<:StridedMatrix}, cache::NewtonCache{T}) where {T<:Float64}
+        Adata = getproperty(A, :factors)
+        ipiv = getproperty(A, :ipiv)
+        return lapack_getri!(Adata, ipiv, cache.blas_work)
     end
-    lda = max(1,stride(A, 2))
-    info  = Ref{BlasInt}()
 
-    if length(work) < max(1, n)
-        lwork = BlasInt(-1)
-        length(work) == 0 && resize!(work, 1)
-        ccall((@blasfunc(dgetri_), libblastrampoline), Cvoid,
-              (Ref{BlasInt}, Ptr{T}, Ref{BlasInt}, Ptr{BlasInt},
-               Ptr{T}, Ref{BlasInt}, Ptr{BlasInt}),
-              n, A, lda, ipiv, work, lwork, info)
-        chklapackerror(info[])
-        lwork = BlasInt(real(work[1]))
-        resize!(work, lwork)
-    else
-        lwork = BlasInt(length(work))
+    # Code from LinearAlgebra/src/lapack.jl, adjusted to allow work::Vector as input 
+    function lapack_getri!(A::AbstractMatrix{T}, ipiv::AbstractVector{LA.BlasInt}, work::Vector{T}) where {T<:Float64} 
+        LA.require_one_based_indexing(A, ipiv)
+        LA.chkstride1(A, ipiv)
+        n = LA.checksquare(A)
+        if n != length(ipiv)
+            throw(DimensionMismatch("ipiv has length $(length(ipiv)), but needs $n"))
+        end
+        lda = max(1,stride(A, 2))
+        info  = Ref{LA.BlasInt}()
+
+        if length(work) < max(1, n)
+            lwork = LA.BlasInt(-1)
+            length(work) == 0 && resize!(work, 1)
+            ccall((LA.BLAS.@blasfunc(dgetri_), LA.libblastrampoline), Cvoid,
+                (Ref{LA.BlasInt}, Ptr{T}, Ref{LA.BlasInt}, Ptr{LA.BlasInt},
+                Ptr{T}, Ref{LA.BlasInt}, Ptr{LA.BlasInt}),
+                n, A, lda, ipiv, work, lwork, info)
+            LA.LAPACK.chklapackerror(info[])
+            lwork = LA.BlasInt(real(work[1]))
+            resize!(work, lwork)
+        else
+            lwork = LA.BlasInt(length(work))
+        end
+        
+        ccall((LA.BLAS.@blasfunc(dgetri_), LA.libblastrampoline), Cvoid,
+                (Ref{LA.BlasInt}, Ptr{T}, Ref{LA.BlasInt}, Ptr{LA.BlasInt},
+                Ptr{T}, Ref{LA.BlasInt}, Ptr{LA.BlasInt}),
+                n, A, lda, ipiv, work, lwork, info)
+        LA.LAPACK.chklapackerror(info[])
+        lwork = LA.BlasInt(real(work[1]))
+        if length(work) != lwork
+            resize!(work, lwork)
+        end
+        return A
     end
-    
-    
-    ccall((@blasfunc(dgetri_), libblastrampoline), Cvoid,
-            (Ref{BlasInt}, Ptr{T}, Ref{BlasInt}, Ptr{BlasInt},
-            Ptr{T}, Ref{BlasInt}, Ptr{BlasInt}),
-            n, A, lda, ipiv, work, lwork, info)
-    chklapackerror(info[])
-    lwork = BlasInt(real(work[1]))
-    if length(work) != lwork
-        resize!(work, lwork)
-    end
-    return A
+
 end
