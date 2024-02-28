@@ -2,7 +2,7 @@
     for T in (Float32, Float64)    
         for n in (3, 10, 20, 30, 100)
             A = rand(T, n, n) + n * LinearAlgebra.I
-            cache = NewtonCache(A[:,1], identity)
+            cache = NewtonCache(A[:,1])
             Ainv = inv(A)
             Ainv2 = Newton.inv!(A, cache)
             @test Ainv ≈ Ainv2

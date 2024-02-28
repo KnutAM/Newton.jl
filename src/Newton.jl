@@ -19,12 +19,12 @@ end
 include("inverse.jl")
 
 """
-    function NewtonCache(x::AbstractVector, rf!)
+    function NewtonCache(x::AbstractVector)
     
 Create the cache used by the `newtonsolve` and `linsolve!`. 
 Only a copy of `x` will be used. 
 """
-function NewtonCache(x::AbstractVector, rf!)
+function NewtonCache(x::AbstractVector, rf! = nothing)
     result = DiffResults.JacobianResult(x)
     cfg = ForwardDiff.JacobianConfig(rf!, x, result.value, ForwardDiff.Chunk(length(x)))
     lupivot = Vector{Int}(undef, length(x))

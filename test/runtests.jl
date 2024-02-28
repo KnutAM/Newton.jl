@@ -9,15 +9,10 @@ include("test_inv.jl")
 
 multiinput_rf!(r::Vector, x::Vector, A::Matrix, b::Vector) = (r .= b .+ A*x)
 
-function setup_cache(x, A, b)
-    rf!(r, x) = multiinput_rf!(r, x, A, b)
-    return NewtonCache(x, rf!)
-end
-
 function determine_solution(A, b)
     x0 = zero(b)
     rf!(r, x) = multiinput_rf!(r, x, A, b)
-    cache=NewtonCache(x0, rf!)
+    cache = NewtonCache(x0)
     x, _, _ = newtonsolve(x0, rf!, cache)
     return x
 end
@@ -28,7 +23,7 @@ end
     A1, A2 = [copy(A) for _ in 1:2]
     b1, b2 = [copy(b) for _ in 1:2]
     rf!(r, x) = (r .= x)
-    @test A1\b1 ≈ Newton.linsolve!(A2, b2, NewtonCache(b, rf!))
+    @test A1\b1 ≈ Newton.linsolve!(A2, b2, NewtonCache(b))
 end
 
 @testset "newtonsolve (dynamic)" begin
@@ -40,7 +35,7 @@ end
     function rf_solution!(r, x)
         r .= - a + b.*x + exp.(x)
     end
-    cache = NewtonCache(x0, rf_solution!)
+    cache = NewtonCache(x0)
     @test x0 !== getx(cache) # Check that x0 is not aliased to getx(cache)
     xguess = getx(cache)
     copy!(xguess, x0)
@@ -52,9 +47,12 @@ end
     @test drdx ≈ ForwardDiff.jacobian(rf_solution!, r_check, x)
 
     # Test with given cache
+    x1 = copy(getx(cache))
     copy!(getx(cache), x0)
     x, drdx, converged = newtonsolve(getx(cache), rf_solution!, cache; tol=tol)
     @test x === getx(cache) # Output should be aliased to cache
+    x, drdx, converged = newtonsolve(x1, rf_solution!, cache; tol=tol)
+    @test x === x1 !== getx(cache) # Output x should not be aliased to cache
 
     function rf_nosolution!(r, x)
         r .= a .+ b.*x.^2
@@ -62,19 +60,6 @@ end
     x = copy(x0)
     x, drdx, converged = newtonsolve(x, rf_nosolution!)
     @test !converged
-    
-    # Test function with different anynomous functions for cache and solving
-    cache = setup_cache(x0, zeros(nsize,nsize), zeros(nsize))   # If these A and b inputs are used, solution is zero
-    A = nsize*I+rand(nsize,nsize)
-    A += transpose(A)   # Symmetrize to ensure invertible
-    b = rand(nsize)
-    
-    x = copy(x0)
-    rf_solve!(r, x) = multiinput_rf!(r, x, A, b)
-    x, drdx, converged = newtonsolve(x, rf_solve!, cache)
-    @test converged
-    @test isapprox(rf_solve!(r_check, x), zero(r_check); atol=tol)
-    @test .!(isapprox(x, zero(x); atol=tol))
 
     # Test that error is thrown if we try to use automatic differentiation of the newtonsolve!
     diff_fun(y) = determine_solution(A, y)
