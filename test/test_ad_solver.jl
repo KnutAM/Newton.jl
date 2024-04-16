@@ -35,8 +35,11 @@ end
 @testset "ad_solver" begin
     aa = [0.4, 0.8, 0.5, 0.5, 0.9, 0.4] # Some vector for which there exists a solution
     rr = zeros(6)
+    rc = copy(rr)
     for f in (outer_function2!, outer_function6!)
         drda_ad = ForwardDiff.jacobian(f, rr, aa)
+        f(rc, aa)
+        @test rc ≈ rr
         drda_num = fill!(similar(drda_ad), NaN)
         @assert isnan(drda_num[1,1])
         FiniteDiff.finite_difference_jacobian!(drda_num, f, aa)
