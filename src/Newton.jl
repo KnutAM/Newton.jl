@@ -5,8 +5,13 @@ using DiffResults
 using ForwardDiff
 using StaticArrays
 using Printf
+import Tensors: Tensors, AbstractTensor
 
 include("utils.jl")
+
+export newtonsolve
+export NewtonCache
+export getx
 
 struct NewtonCache{T,Tres,Tcfg}
     x::Vector{T}
@@ -52,7 +57,7 @@ function linsolve!(K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
 end
 
 """
-    newtonsolve(x0::AbstractVector, rf!, [cache::NewtonCache]; tol=1.e-6, maxiter=100)
+    newtonsolve(rf!, x0::AbstractVector, [cache::NewtonCache]; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
 the mutating residual function `rf!(r, x)`, with signature `rf!(r::T, x::T)::T where T<:AbstractVector`
@@ -64,7 +69,7 @@ returns `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(x0::AbstractVector, rf!, cache::NewtonCache = NewtonCache(x0,rf!); tol=1.e-6, maxiter=100)
+function newtonsolve(rf!::F, x0::AbstractVector, cache::NewtonCache = NewtonCache(x0,rf!); tol=1.e-6, maxiter=100) where F
     diffresult = cache.result
     x = getx(cache)
     copyto!(x, x0)
@@ -99,7 +104,7 @@ end
 @inline check_no_dual(::ForwardDiff.Dual) = throw(ArgumentError("newtonsolve cannot be differentiated"))
 
 """
-    newtonsolve(x0::Union{SVector,Number}, rf; tol=1.e-6, maxiter=100)
+    newtonsolve(rf, x0::Union{SVector,Number}; tol=1.e-6, maxiter=100)
 
 Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
 the residual function `r=rf(x)`, with signature `rf(x::T)::T where T<:Union{SVector,Number}`.
@@ -110,7 +115,7 @@ returns: `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
+function newtonsolve(rf::F, x::SVector{dim}; tol=1.e-6, maxiter=100) where{F, dim}
     local drdx
     @if_logging errs = zeros(maxiter)
     @if_logging resids = Vector{Float64}[]
@@ -129,7 +134,7 @@ function newtonsolve(x::SVector{dim}, rf; tol=1.e-6, maxiter=100) where{dim}
     return x, drdx, false
 end
     
-function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
+function newtonsolve(rf::F, x::Real; tol=1.e-6, maxiter=100) where F
     local drdx
     @if_logging errs = zeros(maxiter)
     for i = 1:maxiter
@@ -146,8 +151,6 @@ function newtonsolve(x::Real, rf; tol=1.e-6, maxiter=100)
     return x, drdx, false
 end
 
-export newtonsolve
-export NewtonCache
-export getx
+include("deprecated.jl")
 
 end
