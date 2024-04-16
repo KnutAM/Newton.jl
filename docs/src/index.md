@@ -8,7 +8,7 @@ solver that is suitable to be used inside a preformance critical loop.
 
 * [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) is used for the differentiation.
 * [`RecursiveFactorization`](https://github.com/JuliaLinearAlgebra/RecursiveFactorization.jl) is used for LU-factorization of regular matrices
-* [`StaticArrays.jl`](https://github.com/JuliaArrays/StaticArrays.jl/) are also supported
+* [`StaticArrays.jl`](https://github.com/JuliaArrays/StaticArrays.jl/) and [`Tensors.jl`](https://github.com/Ferrite-FEM/Tensors.jl) are also supported
 
 A logging mode can be enabled, see [`Newton.logging_mode`](@ref). 
 When more fine-grained controlled, different algorithms etc. is desired, 

@@ -57,7 +57,7 @@ returns: `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(rf::F, x::SVector{dim}; tol=1.e-6, maxiter=100) where{F, dim}
+function newtonsolve(rf::F, x::Union{SVector, Tensors.Vec, Tensors.SecondOrderTensor}; tol=1.e-6, maxiter=100) where F
     local drdx
     @if_logging errs = zeros(maxiter)
     @if_logging resids = Vector{Float64}[]
@@ -66,7 +66,7 @@ function newtonsolve(rf::F, x::SVector{dim}; tol=1.e-6, maxiter=100) where{F, di
         err = norm(r)
         @if_logging errs[i] = err
         @if_logging push!(resids, r)
-        drdx = ForwardDiff.jacobian(rf, x)
+        drdx = generic_jacobian(rf, x)
         if err < tol
             return x, drdx, true
         end
@@ -75,7 +75,10 @@ function newtonsolve(rf::F, x::SVector{dim}; tol=1.e-6, maxiter=100) where{F, di
     @if_logging show_iteration_trace(errs, resids, tol)
     return x, drdx, false
 end
-    
+
+generic_jacobian(rf::F, x::SVector) where F = ForwardDiff.jacobian(rf, x)
+generic_jacobian(rf::F, x::Union{Tensors.Vec, Tensors.SecondOrderTensor}) where F = Tensors.gradient(rf, x)
+
 function newtonsolve(rf::F, x::Real; tol=1.e-6, maxiter=100) where F
     local drdx
     @if_logging errs = zeros(maxiter)
