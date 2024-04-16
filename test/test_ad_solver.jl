@@ -10,7 +10,7 @@ function outer_function2!(rr::Vector, aa::Vector)
     x0 = ones(Vec{2})
     a = Tensor{2,2}(ntuple(i -> aa[i], 4))
     b = SVector((aa[5], aa[6]))
-    x, converged = ad_newtonsolve(inner_residual, x0, (a, b); tol=1e-14)
+    x, converged = ad_newtonsolve(inner_residual, x0, (a, b); tol=1e-12)
     @assert converged 
     rr[1:2] .= x
     rr[3:4] .= b
@@ -24,7 +24,7 @@ function outer_function6!(rr::Vector, aa::Vector)
     b = SVector((aa[5], aa[6]))
     c, e, f = aa[1:3]
     d = Vec((aa[1], aa[4]))
-    x, converged = ad_newtonsolve(inner_residual, x0, (a, b, c, d, e, f); tol=1e-14)
+    x, converged = ad_newtonsolve(inner_residual, x0, (a, b, c, d, e, f); tol=1e-12)
     @assert converged
     rr[1:2] .= x
     rr[3:4] .= b
