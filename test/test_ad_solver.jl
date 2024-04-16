@@ -33,7 +33,7 @@ function outer_function6!(rr::Vector, aa::Vector)
 end
 
 @testset "ad_solver" begin
-    aa = rand(6)
+    aa = [0.4, 0.8, 0.5, 0.5, 0.9, 0.4] # Some vector for which there exists a solution
     rr = zeros(6)
     for f in (outer_function2!, outer_function6!)
         drda_ad = ForwardDiff.jacobian(f, rr, aa)
