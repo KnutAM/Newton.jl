@@ -13,6 +13,8 @@ function inner_residual(x::SymmetricTensor{2,2}, args::Vec...)
     p = prod(norm, args) + one(s)
     return SymmetricTensor{2,2}((x[1,1] + s, x[2,1], x[2,2] + x[2,2]*x[1,1] - p))
 end
+inner_residual(x::Number, args::Number...) = x + sum(args)
+
 function outer_function2!(rr::Vector, aa::Vector)
     @assert length(rr) == length(aa) == 6
     x0 = ones(Vec{2})
@@ -39,14 +41,21 @@ function outer_function6!(rr::Vector, aa::Vector)
     rr[5:6] .= (x .* b)
     return rr
 end
-function outer_functionN_svec!(rr::Vector, aa::Vector, N::Int, )
+outer_functionN_svec!(rr::Vector, aa::Vector, N::Int) = outer_functionN_scalarargs!(rr, aa, N, SVector((0.0, 0.0)))
+outer_functionN_scalar!(rr::Vector, aa::Vector, N::Int) = outer_functionN_scalarargs!(rr, aa, N, 0.0)
+
+function outer_functionN_scalarargs!(rr::Vector, aa::Vector, N::Int, x0)
     @assert length(rr) == length(aa) == 2
     args = ntuple(i -> aa[1]^i - i * aa[2], N)
-    x0 = SVector((0.0, 0.0))
     x, converged = ad_newtonsolve(inner_residual, x0, args; tol=1e-12)
     @assert converged
-    rr[1] = x[2]^2 * aa[1]*aa[2]
-    rr[2] = x[1]/(aa[2] + 1)
+    if x0 isa Number
+        rr[1] = x^2 * aa[1]*aa[2]
+        rr[2] = x/(aa[2] + 1)
+    else
+        rr[1] = x[2]^2 * aa[1]*aa[2]
+        rr[2] = x[1]/(aa[2] + 1)
+    end
     return rr
 end
 
@@ -76,7 +85,7 @@ end
             @test isapprox(drda_ad, drda_num; atol = 1e-6, rtol = 1e-6)
         end
     end
-    for f in (outer_functionN_svec!, outer_functionN_tensor!)
+    for f in (outer_functionN_scalar!, outer_functionN_svec!, outer_functionN_tensor!)
         @testset "$f" begin
             for N in 1:6
                 @testset "N = $N" begin

@@ -34,7 +34,7 @@ in `dual_args` are, or contain, numbers of `Dual` type
 (e.g. `Dual`, `Vector{<:Dual}` or `AbstractTensor{order, dim, <:Dual}`, `SVector{N, <:Dual}`),
 call [`ad_newtonsolve`](@ref)
 
-* `x, converged = newtonsolve(rf::Function,  x::Union{Real, SVector, AbstractTensor}, (dual_args...,))`
+* `x, converged = ad_newtonsolve(rf::Function,  x::Union{Real, SVector, AbstractTensor}, (dual_args...,))`
 
 which will return `x` as a `Dual` value, or containing `Dual` values reflecting the derivative of `x` considering that 
 `rf(x, dual_args...) = 0`, such that `dr/dx = 0` where `x` is a function of `dual_args`. 
