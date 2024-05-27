@@ -1,7 +1,7 @@
 name = "Newton"
 uuid = "83aa5b51-0588-403c-85e4-434ec185aae7"
 authors = ["Knut Andreas Meyer and contributors"]
-version = "0.1.7"
+version = "0.2.0"
 
 [deps]
 DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
@@ -11,13 +11,15 @@ Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 RecursiveFactorization = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Tensors = "48a634ad-e948-5137-8d70-aa71f2a747f4"
 
 [compat]
 RecursiveFactorization = "≥ 0.2.8"
 julia = "1"
 
 [extras]
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "FiniteDiff"]

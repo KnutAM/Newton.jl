@@ -30,14 +30,14 @@ function run_benchmark(dim)
 
     # Get time for newtonsolve
     print("newtonsolve static:  ")
-    @btime newtonsolve(x_, $rf) setup=(x_=copy($x_s)) evals=1;
+    @btime newtonsolve($rf, x_) setup=(x_=copy($x_s)) evals=1;
 
     # Get time for newtonsolve!
     # First time setup
     cache = NewtonCache(x_d, rf!)
     
     print("newtonsolve dynamic: ")
-    @btime newtonsolve(x_, $rf!, $cache) setup=(x_=copy($x_d)) evals=1;
+    @btime newtonsolve($rf!, x_, $cache) setup=(x_=copy($x_d)) evals=1;
 
     # Get time for nlsolve
     print("nlsolve dynamic:     ")
@@ -50,6 +50,6 @@ x = 0.0
 print("rf (scalar):         ")
 @btime rf($x)
 print("newtonsolve scalar:  ")
-@btime newtonsolve($x, $rf)    
+@btime newtonsolve($rf, $x)
 
 run_benchmark.([5,10,20,40])
