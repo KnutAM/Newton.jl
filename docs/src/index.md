@@ -22,11 +22,24 @@ using Newton
 ```
 
 ## Typical usage
-Solve `r(x)=0` by calling
+Solve `r(x)=0` by calling [`newtonsolve`](@ref)
 
-* `x, drdx, converged = newtonsolve(x::Vector, rf!::Function, cache)`
-* `x, drdx, converged = newtonsolve(x::Union{Real,SVector}, rf::Function)`
+* `x, drdx, converged = newtonsolve(rf!::Function, x::Vector, cache)`
+* `x, drdx, converged = newtonsolve(rf::Function,  x::Union{Real, SVector, AbstractTensor})`
 
+## Usage inside automatically differentiated functions
+If used in a function which should be differentiated by using `ForwardDiff.jl`, `Tensors.jl`, or any 
+other framework that uses `ForwardDiff.jl`'s `Dual` number type, solve `r(x, dual_args...) = 0` where the elements
+in `dual_args` are, or contain, numbers of `Dual` type 
+(e.g. `Dual`, `Vector{<:Dual}` or `AbstractTensor{order, dim, <:Dual}`, `SVector{N, <:Dual}`),
+call [`ad_newtonsolve`](@ref)
+
+* `x, converged = newtonsolve(rf::Function,  x::Union{Real, SVector, AbstractTensor}, (dual_args...,))`
+
+which will return `x` as a `Dual` value, or containing `Dual` values reflecting the derivative of `x` considering that 
+`rf(x, dual_args...) = 0`, such that `dr/dx = 0` where `x` is a function of `dual_args`. 
+
+## Examples
 
 ### Mutating (standard) `Array`
 

@@ -46,10 +46,14 @@ J = zeros(2,2)
 out = zeros(2); inp = [1.2, 0.5]
 cfg = ForwardDiff.JacobianConfig(myfun!, out, inp)
 cfg2 = ForwardDiff.JacobianConfig(myfun2!, out, inp)
-@btime ForwardDiff.jacobian!($J, $myfun2!, $out, $inp, $cfg2);  # 285.662 ns (0 allocations: 0 bytes)
+# Call the standard function using newtonsolve
 @btime myfun2!($out, $inp);                                     # 143.381 ns (0 allocations: 0 bytes)
-@btime ForwardDiff.jacobian!($J, $myfun!, $out, $inp, $cfg);    # 183.359 ns (0 allocations: 0 bytes)
+# Differentiate through newtonsolve
+@btime ForwardDiff.jacobian!($J, $myfun2!, $out, $inp, $cfg2);  # 285.662 ns (0 allocations: 0 bytes)
+# Call the function which uses ad_newtonsolve (no difference)
 @btime myfun!($out, $inp);                                      # 143.381 ns (0 allocations: 0 bytes)
+# Differentiate through ad_newtonsolve
+@btime ForwardDiff.jacobian!($J, $myfun!, $out, $inp, $cfg);    # 183.359 ns (0 allocations: 0 bytes)
 ```
 showing that we get quite close to a regular non-differentiating call wrt. computational time in this microbenchmark.
 
