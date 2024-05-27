@@ -19,3 +19,5 @@ include("test_logging.jl")
     rf!(r, x) = (r .= x)
     @test A1\b1 ≈ Newton.linsolve!(A2, b2, NewtonCache(b))
 end
+
+include("test_deprecated.jl")
