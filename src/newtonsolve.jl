@@ -3,7 +3,7 @@
 
 Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
 the mutating residual function `rf!(r, x)`, with signature `rf!(r::T, x::T)::T where T<:AbstractVector`
-`x0` is the initial guess and the optional `cache` can be preallocated by calling `NewtonCache(x0,rf!)`.
+`x0` is the initial guess and the optional `cache` can be preallocated by calling `NewtonCache(x0)`.
 Note that `x0` is not modified, unless aliased to `getx(cache)`. 
 `tol` is the tolerance for `norm(r)` and `maxiter` the maximum number of iterations. 
 
@@ -11,7 +11,7 @@ returns `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(rf!::F, x0::AbstractVector, cache::NewtonCache = NewtonCache(x0,rf!); tol=1.e-6, maxiter=100) where F
+function newtonsolve(rf!::F, x0::AbstractVector, cache::NewtonCache = NewtonCache(x0); tol=1.e-6, maxiter=100) where F
     diffresult = cache.result
     x = getx(cache)
     copyto!(x, x0)
