@@ -103,22 +103,20 @@ end
     end
     nsize = 4
     num_cases = 10
-    (a,b,x0) = [rand(nsize) for _ in 1:3]
+    (a, b, x0_s) = [rand(SVector{nsize}) for _ in 1:3]
     tol = 1.e-10
-    
+
     # Basic functionality
     function rf_solution!(r, x)
         r .= - a + b.*x + exp.(x)
     end
     rf_solution(x) = - a + b.*x + exp.(x)
 
-    x0_v = [copy(x0) for _ in 1:num_cases]
     checks_dynamic = zeros(Bool, (3,num_cases))
     checks_static = zeros(Bool, (3,num_cases))
     
     Threads.@threads for i in 1:num_cases
-        x0_d = x0_v[i]
-        x0_s = SVector{nsize}(x0_d)
+        x0_d = Vector(x0_s)
         # Dynamic
         x_d, drdx_d, converged_d = newtonsolve(x0_d, rf_solution!; tol=tol)
         r_check = similar(x0_d)

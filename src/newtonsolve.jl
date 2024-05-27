@@ -58,41 +58,25 @@ returns: `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(rf::F, x::T; tol=1.e-6, maxiter=100) where {F, T <: Union{SVector, Vec, SecondOrderTensor}}
+function newtonsolve(rf::F, x::T; tol=1.e-6, maxiter=100) where {F, T <: Union{Number, SVector, Vec, SecondOrderTensor}}
     local drdx
     @if_logging errs = zeros(maxiter)
-    @if_logging resids = T[]
+    @if_logging resids = zeros(T, maxiter)
     for i = 1:maxiter
         r = rf(x)
         err = norm(r)
         @if_logging errs[i] = err
-        @if_logging push!(resids, r)
+        @if_logging resids[i] = r
         drdx = generic_jacobian(rf, x)
         if err < tol
             return x, drdx, true
         end
-        x -= drdx\r
+        x -= linsolve(drdx, r)
     end
     @if_logging show_iteration_trace(errs, resids, tol)
     return x, drdx, false
 end
 
+generic_jacobian(rf::F, x::Number) where F = ForwardDiff.derivative(rf, x)
 generic_jacobian(rf::F, x::SVector) where F = ForwardDiff.jacobian(rf, x)
 generic_jacobian(rf::F, x::Union{Tensors.Vec, Tensors.SecondOrderTensor}) where F = Tensors.gradient(rf, x)
-
-function newtonsolve(rf::F, x::Real; tol=1.e-6, maxiter=100) where F
-    local drdx
-    @if_logging errs = zeros(maxiter)
-    for i = 1:maxiter
-        r = rf(x)
-        err = norm(r)
-        @if_logging errs[i] = err
-        drdx = ForwardDiff.derivative(rf, x)
-        if err < tol 
-            return x, drdx, true
-        end
-        x -= r/drdx
-    end
-    @if_logging show_iteration_trace(errs, nothing, tol)
-    return x, drdx, false
-end

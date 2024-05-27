@@ -1,7 +1,7 @@
 const DualInput = Union{<:ForwardDiff.Dual, <:AbstractArray{TD} where {TD<:ForwardDiff.Dual}}
 const NonDualInput = Union{<:AbstractFloat, <:AbstractArray{TD} where {TD<:AbstractFloat}}
 
- """
+"""
     ad_newtonsolve(rf, x0, rf_dual_args::Tuple; kwargs...)
 
 Solve `rf(x, y₁(z), y₂(z), ...) = 0` to find `x(y₁(z), y₂(z), ...)`,
