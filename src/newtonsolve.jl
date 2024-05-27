@@ -46,21 +46,22 @@ end
 @inline check_no_dual(::ForwardDiff.Dual) = throw(ArgumentError("newtonsolve cannot be differentiated"))
 
 """
-    newtonsolve(rf, x0::Union{SVector,Number}; tol=1.e-6, maxiter=100)
-
+    newtonsolve(rf, x0::T; tol=1.e-6, maxiter=100) where {T <: 
+        Union{Number, StaticArrays.SVector, Tensors.Vec, Tensors.SecondOrderTensor}}
+    
 Solve the nonlinear equation (system) `r(x)=0` using the newton-raphson method by calling
-the residual function `r=rf(x)`, with signature `rf(x::T)::T where T<:Union{SVector,Number}`.
-`x0` is the initial guess, `tol` the tolerance form `norm(r)`, and `maxiter` the maximum number 
+the residual function `r=rf(x)`, with signature `rf(x::T)::T`
+`x0::T` is the initial guess, `tol` the tolerance form `norm(r)`, and `maxiter` the maximum number 
 of iterations. 
 
 returns: `x, drdx, converged::Bool`
 
 `drdx` is the derivative of r wrt. x at the returned `x`.
 """
-function newtonsolve(rf::F, x::Union{SVector, Tensors.Vec, Tensors.SecondOrderTensor}; tol=1.e-6, maxiter=100) where F
+function newtonsolve(rf::F, x::T; tol=1.e-6, maxiter=100) where {F, T <: Union{SVector, Vec, SecondOrderTensor}}
     local drdx
     @if_logging errs = zeros(maxiter)
-    @if_logging resids = Vector{Float64}[]
+    @if_logging resids = T[]
     for i = 1:maxiter
         r = rf(x)
         err = norm(r)

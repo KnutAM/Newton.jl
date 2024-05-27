@@ -5,7 +5,7 @@ using DiffResults
 using ForwardDiff
 using StaticArrays
 using Printf
-import Tensors: Tensors, AbstractTensor
+import Tensors: Tensors, AbstractTensor, Vec, SecondOrderTensor
 
 export newtonsolve, ad_newtonsolve
 export NewtonCache
