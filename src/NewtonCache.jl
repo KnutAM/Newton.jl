@@ -12,7 +12,7 @@ end
 Create the cache used by the `newtonsolve` and `linsolve!`. 
 Only a copy of `x` will be used. 
 """
-function NewtonCache(x::AbstractVector, rf! = nothing)
+function NewtonCache(x::AbstractVector, rf! = Val(:newton_autotag_fun))
     result = DiffResults.JacobianResult(x)
     cfg = ForwardDiff.JacobianConfig(rf!, x, result.value, ForwardDiff.Chunk(length(x)))
     lupivot = Vector{Int}(undef, length(x))

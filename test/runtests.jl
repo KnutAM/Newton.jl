@@ -7,6 +7,7 @@ using Tensors
 using Test
 
 include("test_newtonsolver.jl")
+include("test_ad_in_residual.jl")
 include("test_inv.jl")
 include("test_ad_solver.jl")
 include("test_logging.jl")
