@@ -63,11 +63,10 @@ function newtonsolve(rf::F, x::T; tol=1.e-6, maxiter=100) where {F, T <: Union{N
     @if_logging errs = zeros(maxiter)
     @if_logging resids = zeros(T, maxiter)
     for i = 1:maxiter
-        r = rf(x)
+        r, drdx = _value_jacobian(rf, x)
         err = norm(r)
         @if_logging errs[i] = err
         @if_logging resids[i] = r
-        drdx = generic_jacobian(rf, x)
         if err < tol
             return x, drdx, true
         end
@@ -77,6 +76,19 @@ function newtonsolve(rf::F, x::T; tol=1.e-6, maxiter=100) where {F, T <: Union{N
     return x, drdx, false
 end
 
-generic_jacobian(rf::F, x::Number) where F = ForwardDiff.derivative(rf, x)
-generic_jacobian(rf::F, x::SVector) where F = ForwardDiff.jacobian(rf, x)
-generic_jacobian(rf::F, x::Union{Tensors.Vec, Tensors.SecondOrderTensor}) where F = Tensors.gradient(rf, x)
+function _value_jacobian(rf::F, x::Number) where F
+    dr = DiffResults.DiffResult(x,x)
+    dr_out = ForwardDiff.derivative!(dr, rf, x)
+    return DiffResults.value(dr_out), DiffResults.derivative(dr_out)
+end
+
+function _value_jacobian(rf::F, x::SVector) where F
+    # TODO: Optimize?
+    drdx = ForwardDiff.jacobian(rf, x)
+    return rf(x), drdx
+end
+
+function _value_jacobian(rf::F, x::Union{Tensors.Vec, Tensors.SecondOrderTensor}) where F
+    drdx, r = Tensors.gradient(rf, x, :all)
+    return r, drdx
+end
