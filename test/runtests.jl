@@ -5,6 +5,7 @@ using LinearAlgebra
 using StaticArrays
 using Tensors
 using Test
+using RecursiveFactorization
 
 include("test_newtonsolver.jl")
 include("test_ad_in_residual.jl")

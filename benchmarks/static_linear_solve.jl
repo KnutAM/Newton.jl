@@ -1,112 +1,8 @@
 using StaticArrays
 using BenchmarkTools
+using Newton
+using RecursiveFactorization
 import CairoMakie as Plt
-
-"""
-    extract_submatrix(::Type{SMatrix{d1, d2}}, m::SMatrix, start_row, start_col)
-
-Efficiently extract `s::SMatrix{d1, d2}` such that 
-`s == m[start_row:(start_row + d1 - 1), start_col:(start_col + d2 - 1)]`
-"""
-@generated function extract_submatrix(::Type{SMatrix{d1, d2}}, m::SMatrix, start_row::Int, start_col::Int) where {d1, d2}
-    ex = :(SMatrix{$d1, $d2}())
-    for col_offset in 0:(d2 - 1)
-        for row_offset in 0:(d1 - 1)
-            push!(ex.args, :(m[start_row + $row_offset, start_col + $col_offset]))
-        end
-    end
-    quote
-        @inbounds return $ex
-    end
-end
-
-@generated function join_submatrices(a11::SMatrix{r1, c1}, a21::SMatrix{r2, c1}, a12::SMatrix{r1, c2}, a22::SMatrix{r2, c2}) where {r1, r2, c1, c2}
-    r = r1 + r2
-    c = c1 + c2
-    ex = :(SMatrix{$r, $c}())
-    for col in 1:c
-        for row in 1:r
-            t = if row ≤ r1 && col ≤ c1
-                :(a11[$row, $col])
-            elseif row > r1 && col ≤ c1
-                :(a21[$(row - r1), $col])
-            elseif row ≤ r1 && col > c1
-                :(a12[$row, $(col - c1)])
-            else # row > r1 && col > c1
-                :(a22[$(row - r1), $(col - c1)])
-            end
-            push!(ex.args, t)
-        end
-    end
-    quote
-        @inbounds return $ex
-    end
-end
-
-
-@inline function solve_pairwise(a::SMatrix{d, d}, ::Val{d1}, ::Val{d2}) where {d, d1, d2}
-    @assert d == d1 + d2
-    @inbounds begin                                                 # E.g. for d1=d2=2
-        a11 = extract_submatrix(SMatrix{d1, d1}, a, 1, 1)           # a[1:2, 1:2]
-        a21 = extract_submatrix(SMatrix{d2, d1}, a, d1 + 1, 1)      # a[3:4, 1:2]
-        a12 = extract_submatrix(SMatrix{d1, d2}, a, 1, d1 + 1)      # a[1:2, 3:4]
-        a22 = extract_submatrix(SMatrix{d2, d2}, a, d1 + 1, d1 + 1) # a[3:4, 3:4]
-
-        a22_inv_times_a21 = sinv(a22) * a21
-        a11_inv_times_a12 = sinv(a11) * a12
-
-        b11 = sinv(a11 - a12 * a22_inv_times_a21)
-        b22 = sinv(a22 - a21 * a11_inv_times_a12)
-        b12 = -a11_inv_times_a12 * b22
-        b21 = -a22_inv_times_a21 * b11
-        
-        return b11, b21, b12, b22
-    end
-end
-
-@inline sinv(a::SMatrix{1, 1}; kwargs...) = inv(a)
-@inline sinv(a::SMatrix{2, 2}; kwargs...) = inv(a)
-@inline sinv(a::SMatrix{3, 3}; kwargs...) = inv(a)
-
-function sinv(a::SMatrix{d, d}) where {d}
-    d1 = d ÷ 2
-    d2 = d - d1
-    b11, b21, b12, b22 = solve_pairwise(a, Val(d1), Val(d2))
-    return join_submatrices(b11, b21, b12, b22)
-end
-
-#=
-function sinv(a::SMatrix{4, 4})
-    b11, b21, b12, b22 = solve_pairwise(a, Val(2), Val(2))
-    return join_submatrices(b11, b21, b12, b22)
-end
-
-function sinv(a::SMatrix{5, 5})
-    b11, b21, b12, b22 = solve_pairwise(a, Val(2), Val(3))
-    return join_submatrices(b11, b21, b12, b22)
-end
-
-function sinv(a::SMatrix{6, 6})
-    b11, b21, b12, b22 = solve_pairwise(a, Val(3), Val(3))
-    return join_submatrices(b11, b21, b12, b22)
-end
-
-function sinv(a::SMatrix{7, 7})
-    b11, b21, b12, b22 = solve_pairwise(a, Val(3), Val(4))
-    return join_submatrices(b11, b21, b12, b22)
-end
-=#
-
-
-
-function runit(v::Vector{<:SMatrix})
-    s = zero(eltype(v))
-    for x in v
-        si = sinv(x)
-        s = s + si
-    end
-    return s
-end
 
 function timeit()
     dims = [1:20..., 25:5:60...]
@@ -115,15 +11,25 @@ function timeit()
     rinv_time = Float64[]
     for n in dims
         a = rand(SMatrix{n, n})
-        println("SMatrix{$n, $n}: Equality check passed: ", inv(a) ≈ sinv(a))
+        println("SMatrix{$n, $n}: Equality check passed: ", inv(a) ≈ Newton.sinv(a))
         push!(inv_time,  minimum((@benchmark  inv($(rand(SMatrix{n, n})))).times))
-        push!(sinv_time, minimum((@benchmark sinv($(rand(SMatrix{n, n})))).times))
-        cache = RFCache(zeros(n))
-        push!(rinv_time, minimum((@benchmark testinv!($cache, $(rand(n, n)))).times))
+        push!(sinv_time, minimum((@benchmark Newton.sinv($(rand(SMatrix{n, n})))).times))
+        cache = NewtonCache(zeros(n); linsolver = Newton.RecursiveFactorizationLinsolver())
+        push!(rinv_time, minimum((@benchmark Newton.inv!($(rand(n, n)), $cache)).times))
         println("inv: ", last(inv_time), ", sinv: ", last(sinv_time), ", speedup: ", (last(inv_time), last(rinv_time)) ./ last(sinv_time))
         println()
     end
     return dims, inv_time, sinv_time, rinv_time
+end
+
+# Default values based on ran benchmark
+function plotit(;
+    dims = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45, 50, 55, 60], 
+    inv_time = [1.708, 1.917, 3.625, 10.208, 94.66069546891465, 165.90170380078638, 237.36674816625916, 342.1658986175115, 540.5585106382979, 748.9495798319327, 1045.8, 1320.8, 1579.1, 2217.5555555555557, 2611.1111111111113, 3093.75, 3395.875, 3713.5, 4148.857142857143, 4339.285714285715, 6896.0, 9958.0, 13500.0, 16875.0, 22667.0, 27916.0, 34750.0, 39250.0], 
+    sinv_time = [1.666, 1.917, 3.625, 6.625, 15.239478957915832, 25.14156626506024, 41.33097880928355, 61.41692150866463, 101.82271762208067, 155.2240932642487, 196.41754385964913, 274.9077490774908, 366.26341463414633, 396.25, 500.42783505154637, 579.0514285714286, 807.8777777777777, 1054.1, 1208.3, 1287.5, 2615.777777777778, 4053.5714285714284, 10917.0, 13584.0, 19458.0, 26916.0, 33083.0, 48000.0], 
+    rinv_time = [57.026476578411405, 101.06951871657753, 125.28058361391695, 173.33285714285714, 236.30536130536132, 306.19747899159665, 416.6683417085427, 482.51295336787564, 611.7514450867052, 748.5966386554621, 894.8863636363636, 918.8947368421053, 1175.0, 1416.6, 1608.3, 1741.6, 2000.0, 2310.222222222222, 2587.8888888888887, 2703.777777777778, 4589.285714285715, 7062.5, 10041.0, 13041.0, 17417.0, 21791.0, 27667.0, 33250.0]
+    )
+    return plotit(dims, inv_time, sinv_time, rinv_time)
 end
 
 function plotit(dims, inv_time, sinv_time, rinv_time)
@@ -133,8 +39,8 @@ function plotit(dims, inv_time, sinv_time, rinv_time)
     Plt.lines!(ax, dims, rinv_time; label = "rinv")
     Plt.lines!(ax, dims, sinv_time; label = "sinv")
     Plt.axislegend(ax; position = :rb)
-    ax2 = Plt.Axis(fig[1,2]; xlabel = "dim", ylabel = "speedup")
-    Plt.lines!(ax2, dims, inv_time ./ sinv_time; label = "inv")
-    Plt.lines!(ax2, dims, rinv_time ./ sinv_time; label = "rinv")
+    ax2 = Plt.Axis(fig[1,2]; xlabel = "dim", ylabel = "relative time")
+    Plt.lines!(ax2, dims, sinv_time ./ inv_time; label = "inv")
+    Plt.lines!(ax2, dims, sinv_time ./ rinv_time; label = "rinv")
     return fig
 end

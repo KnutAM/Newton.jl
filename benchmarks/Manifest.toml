@@ -2,7 +2,7 @@
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "47bcd163620ab0179ded85b8c9ef26e20f8c40f6"
+project_hash = "123a4e05ad494742a8cf6cf5f6e82180dad169a2"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "7927b9af540ee964cc5d1b73293f1eb0b761a3a1"
@@ -62,12 +62,6 @@ deps = ["Colors"]
 git-tree-sha1 = "e092fa223bf66a3c41f9c022bd074d916dc303e7"
 uuid = "27a7e980-b3e6-11e9-2bcd-0b925532e340"
 version = "0.4.2"
-
-[[deps.AppleAccelerate]]
-deps = ["Libdl", "LinearAlgebra"]
-git-tree-sha1 = "48c1ba3e10eb3a28789ef18e35ebc9c8e5c3d390"
-uuid = "13e28ba4-7ad8-5781-acae-3021b1ed3924"
-version = "0.4.1"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -215,12 +209,6 @@ git-tree-sha1 = "05ba0d07cd4fd8b7a39541e31a7b0254704ea581"
 uuid = "fb6a15b2-703c-40df-9091-08a04967cfa9"
 version = "0.1.13"
 
-[[deps.CodeTracking]]
-deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "5ac098a7c8660e217ffac31dc2af0964a8c3182a"
-uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "2.0.0"
-
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON"]
 git-tree-sha1 = "e771a63cc8b539eca78c85b0cabd9233d6c8f06f"
@@ -279,11 +267,6 @@ weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
     CompatLinearAlgebraExt = "LinearAlgebra"
-
-[[deps.Compiler]]
-git-tree-sha1 = "382d79bfe72a406294faca39ef0c3cef6e6ce1f1"
-uuid = "807dbc54-b67e-4c79-8afb-eafe4df6f2e1"
-version = "0.1.1"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -851,12 +834,6 @@ git-tree-sha1 = "eac1206917768cb54957c65a615460d87b455fc1"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.1.1+0"
 
-[[deps.JuliaInterpreter]]
-deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "e09121f4c523d8d8d9226acbed9cb66df515fcf2"
-uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.10.4"
-
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
 git-tree-sha1 = "ba51324b894edaf1df3ab16e2cc6bc3280a2f1a7"
@@ -1015,12 +992,6 @@ weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
     ForwardDiffExt = ["ChainRulesCore", "ForwardDiff"]
     SpecialFunctionsExt = "SpecialFunctions"
 
-[[deps.LoweredCodeUtils]]
-deps = ["CodeTracking", "Compiler", "JuliaInterpreter"]
-git-tree-sha1 = "73b98709ad811a6f81d84e105f4f695c229385ba"
-uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
-version = "3.4.3"
-
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
 git-tree-sha1 = "282cadc186e7b2ae0eeadbd7a4dffed4196ae2aa"
@@ -1113,10 +1084,14 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
 [[deps.Newton]]
-deps = ["DiffResults", "ForwardDiff", "LinearAlgebra", "Preferences", "Printf", "RecursiveFactorization", "StaticArrays", "Tensors"]
+deps = ["DiffResults", "ForwardDiff", "LinearAlgebra", "Preferences", "Printf", "StaticArrays", "Tensors"]
 path = ".."
 uuid = "83aa5b51-0588-403c-85e4-434ec185aae7"
 version = "0.2.1"
+weakdeps = ["RecursiveFactorization"]
+
+    [deps.Newton.extensions]
+    RecursiveFactorizationExt = "RecursiveFactorization"
 
 [[deps.Observables]]
 git-tree-sha1 = "7438a59546cf62428fc9d1bc94729146d37a7225"
@@ -1378,16 +1353,6 @@ git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
 
-[[deps.Revise]]
-deps = ["CodeTracking", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "20ccb7e2501e9da93fe8450d01aeabf16a5f0c82"
-uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.8.1"
-weakdeps = ["Distributed"]
-
-    [deps.Revise.extensions]
-    DistributedExt = "Distributed"
-
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
 git-tree-sha1 = "852bd0f55565a9e973fcfee83a84413270224dc4"
@@ -1483,9 +1448,9 @@ version = "1.11.0"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
-git-tree-sha1 = "66e0a8e672a0bdfca2c3f5937efb8538b9ddc085"
+git-tree-sha1 = "64d974c2e6fdf07f8155b5b2ca2ffa9069b608d9"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
