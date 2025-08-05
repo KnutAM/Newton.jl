@@ -52,21 +52,19 @@ function rf!(r::Vector, x::Vector, a, b)
 end
 ```
 
-Define the unknown array `x` and a residual function with the signature `rf!(r,x)` with inputs `a` and `b` of the same type as will be used later. Then preallocate `cache`
+Define the array `x` for the unknowns that will later be used, and preallocate `cache`
 ```julia
 x=zeros(5)
-a = 1.0; b=1.0
-mock_rf!(r_, x_) = rf!(r_, x_, a, b)
-cache = NewtonCache(x,mock_rf!)
+cache = NewtonCache(x)
 ```
 
 **Runtime setup** (inside simulation): At the place where we want to solve the problem `r(x)=0`
 ```julia
 a, b = rand(2); # However they are calculated during simulations
-true_rf!(r_, x_) = rf!(r_, x_, a, b)
+rf_closure!(r_, x_) = rf!(r_, x_, a, b)
 x0 = getx(cache)
 # Modify x0 as you wish to provide initial guess
-x, drdx, converged = newtonsolve(x0, true_rf!, cache)
+x, drdx, converged = newtonsolve(rf_closure!, x0, cache)
 ```
 It is not necessary to get `x0` from the cache, but this avoids allocating it. However, this implies that `x0` will be aliased to the output, i.e. `x0===x` after solving. 
 
@@ -83,9 +81,9 @@ end
 No cache setup is required for static arrays. Hence, get the inputs `a` and `b`, define the true residual function with signature `r=rf(x)`, define an initial guess `x0`, and call the `newtonsolve`
 ```julia
 a=rand(); b=rand();
-rf_true(x_) = rf(x_, a, b)
+rf_closure(x_) = rf(x_, a, b)
 x0 = zero(SVector{5})
-x, drdx, converged = newtonsolve(x0, rf_true);
+x, drdx, converged = newtonsolve(rf_closure, x0);
 ```
 which as in the mutatable array case returns a the solution
 vector, the jacobian at the solution and a boolean whether 
