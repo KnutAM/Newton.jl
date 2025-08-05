@@ -12,7 +12,8 @@ export newtonsolve, ad_newtonsolve
 export NewtonCache
 export getx
 
-public StandardLinsolver, UnsafeFastLinsolver, RecursiveFactorizationLinsolver
+include("compat.jl") # Defines @public
+@public StandardLinsolver, UnsafeFastLinsolver, RecursiveFactorizationLinsolver
 
 include("utils.jl")
 
