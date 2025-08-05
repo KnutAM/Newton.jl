@@ -14,7 +14,8 @@ end
     tol = 1.e-10
     @test NewtonCache(x0).linsolver isa Newton.StandardLinsolver # Default
 
-    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), Newton.RecursiveFactorizationLinsolver())
+    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), VERSION ≥ v"1.11" ? Newton.RecursiveFactorizationLinsolver() : nothing)
+        linsolver === nothing && continue
         # Basic functionality
         function rf_solution!(r, x)
             r .= - a + b.*x + exp.(x)
@@ -117,7 +118,8 @@ end
     end
     rf_solution(x) = - a + b.*x + exp.(x)
 
-    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), Newton.RecursiveFactorizationLinsolver())
+    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), VERSION ≥ v"1.11" ? Newton.RecursiveFactorizationLinsolver() : nothing)
+        linsolver === nothing && continue
         checks_dynamic = zeros(Bool, (3,num_cases))
         checks_static = zeros(Bool, (3,num_cases))
         Threads.@threads for i in 1:num_cases

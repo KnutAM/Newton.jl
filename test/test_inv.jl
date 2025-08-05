@@ -1,5 +1,6 @@
 @testset "inv!" begin
-    for (linsolver, ns) in ((Newton.StandardLinsolver(), (3, 10, 30, 100)), (Newton.RecursiveFactorizationLinsolver(), 10),)# (Newton.UnsafeFastLinsolver(), 10))
+    for (linsolver, ns) in ((Newton.StandardLinsolver(), (3, 10, 30, 100)), (VERSION ≥ v"1.11" ? Newton.RecursiveFactorizationLinsolver() : nothing, 10), (Newton.UnsafeFastLinsolver(), 10))
+        linsolver === nothing && continue
         for n in ns
             for T in (n == 10 ? (Float32, Float64) : (Float64,))
                 A = rand(T, n, n) + n * LinearAlgebra.I
