@@ -103,5 +103,5 @@ function linsolve end
 @inline linsolve(::UnsafeFastLinsolver, K::SMatrix, b::SVector) = sinv(K) * b
 @inline linsolve(::UnsafeFastLinsolver, K::SecondOrderTensor, b::AbstractTensor) = K \ b # Tensors.jl has a fast implementation, using that. 
 @inline function linsolve(::UnsafeFastLinsolver, K::FourthOrderTensor, b::AbstractTensor)
-    return frommandel(Tensors.get_base(typeof(K)), sinv(tomandel(SArray, K))) ⊡ b
+    return Tensors.frommandel(Tensors.get_base(typeof(K)), sinv(Tensors.tomandel(SArray, K))) ⊡ b
 end

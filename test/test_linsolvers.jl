@@ -20,19 +20,19 @@ end
         @testset "scalar" begin
             K, x = rand(2)
             b = K * x
-            @test x ≈ linsolve(linsolver, K, b)
+            @test x ≈ Newton.linsolve(linsolver, K, b)
         end
         @testset "SMatrix" begin
             K, x = (rand(SMatrix{2, 2}) + LinearAlgebra.I, rand(SVector{2}))
             b = K * x
-            @test x ≈ linsolve(linsolver, K, b)
+            @test x ≈ Newton.linsolve(linsolver, K, b)
         end
         @testset "Tensors" begin
             @testset for (op, order) in ((⋅, 2), (⊡, 4))
                 @testset for T in (Tensor, SymmetricTensor)
                     K, x = (rand(T{order, 3}) + one(Tensor{order, 3}), rand(Tensor{order÷2, 3}))
                     b = op(K, x)
-                    @test x ≈ linsolve(linsolver, K, b)
+                    @test x ≈ Newton.linsolve(linsolver, K, b)
                 end
             end
         end
