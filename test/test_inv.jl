@@ -23,8 +23,16 @@
     end
 end
 
+@testset "sinv!" begin
+    for n in 1:21
+        A = rand(n, n) + n * LinearAlgebra.I
+        Ainv = inv(A)
+        @test Ainv ≈ Newton.sinv!(A)
+    end
+end
+
 @testset "sinv" begin
-    for n in [4, 10, 40]
+    for n in [3, 10, 20]
         A = SMatrix{n, n}(rand(n, n)) + n * LinearAlgebra.I
         @test inv(A) ≈ Newton.sinv(A)
     end

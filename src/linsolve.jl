@@ -68,7 +68,7 @@ end
 
 # UnsafeFastLinsolver
 function linsolve!(::UnsafeFastLinsolver, K::AbstractMatrix, b::AbstractVector, cache::NewtonCache)
-    if length(b) < 50 # Accuracy can become really unreliable for larger matrices, and no performance improvement either. 
+    if length(b) < 20 # Accuracy unreliable for larger matrices, and perf not as good, so sinv! is limited to ≤ 20x20
         sinv!(K)
         return K * b
     else

@@ -1,6 +1,6 @@
 using Preferences
 
-if Newton.LOGGING    
+if Newton.LOGGING
     @testset "logging_mode" begin
         @test Preferences.load_preference(Newton, "log_iterations")
         Newton.logging_mode(;enable=false)

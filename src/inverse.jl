@@ -87,11 +87,22 @@ to benchmarks on macbook with M3 processor.
 """
 function sinv end
 
-@inline sinv(a::SMatrix{1, 1}; kwargs...) = inv(a)
-@inline sinv(a::SMatrix{2, 2}; kwargs...) = inv(a)
-@inline sinv(a::SMatrix{3, 3}; kwargs...) = inv(a)
+@inline sinv(a::SMatrix{1, 1}) = inv(a)
+@inline sinv(a::SMatrix{2, 2}) = inv(a)
+@inline sinv(a::SMatrix{3, 3}) = inv(a)
 
-@inline function sinv(a::SMatrix{d, d}) where {d}
+const _SM{d} = SMatrix{d, d}
+
+@inline function sinv(a::Union{_SM{4}, _SM{5}, _SM{6}, _SM{7}, _SM{8}, _SM{9}, _SM{10}})
+    getd(::SMatrix{dd, dd}) where {dd} = dd
+    d = getd(a)
+    d1 = d ÷ 2
+    d2 = d - d1
+    b11, b21, b12, b22 = solve_pairwise(a, Val(d1), Val(d2))
+    return join_submatrices(b11, b21, b12, b22)
+end
+
+function sinv(a::SMatrix{d, d}) where {d}
     d1 = d ÷ 2
     d2 = d - d1
     b11, b21, b12, b22 = solve_pairwise(a, Val(d1), Val(d2))
@@ -173,7 +184,7 @@ and fall back to generic `LinearAlgebra.inv`
 """
 @inline function sinv!(K::Matrix)
     n = size(K, 1)
-    @assert n == size(K, 2)
+    @assert n == size(K, 2) > 0
 
     @inbounds begin
         if n == 1
@@ -196,7 +207,16 @@ and fall back to generic `LinearAlgebra.inv`
             K .= sinv(SMatrix{9, 9}(K))
         elseif n == 10
             K .= sinv(SMatrix{10, 10}(K))
-        elseif n == 11
+        else # n ≥ 11
+            sinv_11!(K, n)
+        end
+    end
+    return K
+end
+
+function sinv_11!(K, n)
+    @inbounds begin
+        if n == 11
             K .= sinv(SMatrix{11, 11}(K))
         elseif n == 12
             K .= sinv(SMatrix{12, 12}(K))
@@ -217,8 +237,11 @@ and fall back to generic `LinearAlgebra.inv`
         elseif n == 20
             K .= sinv(SMatrix{20, 20}(K))
         else
-            K .= LinearAlgebra.inv!(LinearAlgebra.lu!(K)) # Shouldn't be used for this case, but to give the right result...
+            # Shouldn't be used for this case, but to give the right result...
+            K .= LinearAlgebra.inv!(LinearAlgebra.lu!(K))
         end
     end
     return K
 end
+
+
