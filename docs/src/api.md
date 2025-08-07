@@ -11,9 +11,19 @@ getx
 Newton.logging_mode
 ```
 
+### Available linear solvers
+```@docs
+Newton.AbstractLinsolver
+Newton.StandardLinsolver
+Newton.UnsafeFastLinsolver
+Newton.RecursiveFactorizationLinsolver
+```
+
 ### Fast inverse
 ```@docs
 Newton.inv!
+Newton.sinv
+Newton.sinv!
 ```
 
 ### Use inside AD-calls
@@ -60,4 +70,7 @@ showing that we get quite close to a regular non-differentiating call wrt. compu
 ## Internal API
 ```@docs
 Newton.linsolve!
+Newton.linsolve
+Newton.extract_submatrix
+Newton.join_submatrices
 ```

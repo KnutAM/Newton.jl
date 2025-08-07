@@ -1,6 +1,5 @@
 module Newton
 using LinearAlgebra
-using RecursiveFactorization
 using DiffResults
 using ForwardDiff
 using StaticArrays
@@ -12,6 +11,9 @@ import Tensors:
 export newtonsolve, ad_newtonsolve
 export NewtonCache
 export getx
+
+include("compat.jl") # Defines @public
+@public StandardLinsolver, UnsafeFastLinsolver, RecursiveFactorizationLinsolver
 
 include("utils.jl")
 

@@ -12,68 +12,74 @@ end
     nsize = 4
     (a,b,x0) = [rand(nsize) for _ in 1:3]
     tol = 1.e-10
-    
-    # Basic functionality
-    function rf_solution!(r, x)
-        r .= - a + b.*x + exp.(x)
-    end
-    cache = NewtonCache(x0)
-    @test x0 !== getx(cache) # Check that x0 is not aliased to getx(cache)
-    xguess = getx(cache)
-    copy!(xguess, x0)
-    x, drdx, converged = newtonsolve(rf_solution!, xguess; tol=tol)
-    r_check = similar(x0)
-    @test x0 == xguess     # Input should not be modified when not aliased
-    @test converged
-    @test isapprox(rf_solution!(r_check, x), zero(r_check); atol=tol)
-    @test drdx ≈ ForwardDiff.jacobian(rf_solution!, r_check, x)
+    @test NewtonCache(x0).linsolver isa Newton.StandardLinsolver # Default
 
-    # Test with given cache
-    x1 = copy(getx(cache))
-    copy!(getx(cache), x0)
-    x, drdx, converged = newtonsolve(rf_solution!, getx(cache), cache; tol=tol)
-    @test x === getx(cache) # Output should be aliased to cache
-    x, drdx, converged = newtonsolve(rf_solution!, x1, cache; tol=tol)
-    @test x === getx(cache) !== x1 # Output x should be aliased to cache, not to input
+    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), VERSION ≥ v"1.11" ? Newton.RecursiveFactorizationLinsolver() : nothing)
+        linsolver === nothing && continue
+        # Basic functionality
+        function rf_solution!(r, x)
+            r .= - a + b.*x + exp.(x)
+        end
+        cache = NewtonCache(x0; linsolver)
+        @test x0 !== getx(cache) # Check that x0 is not aliased to getx(cache)
+        xguess = getx(cache)
+        copy!(xguess, x0)
+        x, drdx, converged = newtonsolve(rf_solution!, xguess; tol=tol)
+        r_check = similar(x0)
+        @test x0 == xguess     # Input should not be modified when not aliased
+        @test converged
+        @test isapprox(rf_solution!(r_check, x), zero(r_check); atol=tol)
+        @test drdx ≈ ForwardDiff.jacobian(rf_solution!, r_check, x)
 
-    function rf_nosolution!(r, x)
-        r .= a .+ b.*x.^2
-    end
-    x = copy(x0)
-    x, drdx, converged = newtonsolve(rf_nosolution!, x)
-    @test !converged
+        # Test with given cache
+        x1 = copy(getx(cache))
+        copy!(getx(cache), x0)
+        x, drdx, converged = newtonsolve(rf_solution!, getx(cache), cache; tol=tol)
+        @test x === getx(cache) # Output should be aliased to cache
+        x, drdx, converged = newtonsolve(rf_solution!, x1, cache; tol=tol)
+        @test x === getx(cache) !== x1 # Output x should be aliased to cache, not to input
 
-    # Test that error is thrown if we try to use automatic differentiation of the newtonsolve!
-    diff_fun(y) = determine_solution(A, y)
-    failed = false
-    try
-        df = ForwardDiff.jacobian(diff_fun, rand(nsize))
-    catch err
-        failed = true
+        function rf_nosolution!(r, x)
+            r .= a .+ b.*x.^2
+        end
+        x = copy(x0)
+        x, drdx, converged = newtonsolve(rf_nosolution!, x)
+        @test !converged
+
+        # Test that error is thrown if we try to use automatic differentiation of the newtonsolve!
+        diff_fun(y) = determine_solution(A, y)
+        failed = false
+        try
+            df = ForwardDiff.jacobian(diff_fun, rand(nsize))
+        catch err
+            failed = true
+        end
+        @test failed
     end
-    @test failed
 
 end
 
 @testset "newtonsolve (static)" begin
     dim = 6
-    for T in (Float32,Float64)    
-        (a,b,x0) = [rand(SVector{dim,T}) for _ in 1:3]
+    for T in (Float32, Float64)
+        for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver())
+            (a,b,x0) = [rand(SVector{dim,T}) for _ in 1:3]
 
-        rf_solution(x) = - a + b.*x + exp.(x)
-        rf_nosolution(x) = a .+ b.*x.^2
+            rf_solution(x) = - a + b.*x + exp.(x)
+            rf_nosolution(x) = a .+ b.*x.^2
 
-        x, drdx, converged = newtonsolve(rf_solution, x0; tol=1.e-6)
-        @test converged
-        @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
-        @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
-        @test isa(first(x), T)
-        @test isa(first(drdx), T)
+            x, drdx, converged = newtonsolve(rf_solution, x0; tol=1.e-6, linsolver)
+            @test converged
+            @test isapprox(norm(rf_solution(x)), 0.0, atol=1.e-6)
+            @test drdx ≈ ForwardDiff.jacobian(rf_solution, x)
+            @test isa(first(x), T)
+            @test isa(first(drdx), T)
 
-        x, drdx, converged = newtonsolve(rf_nosolution, x0; tol=1.e-6, maxiter=4)
-        @test ~converged
-        @test isa(first(x),T)
-        @test isa(first(drdx), T)
+            x, drdx, converged = newtonsolve(rf_nosolution, x0; tol=1.e-6, maxiter=4, linsolver)
+            @test ~converged
+            @test isa(first(x),T)
+            @test isa(first(drdx), T)
+        end
     end
 end
 
@@ -112,24 +118,31 @@ end
     end
     rf_solution(x) = - a + b.*x + exp.(x)
 
-    checks_dynamic = zeros(Bool, (3,num_cases))
-    checks_static = zeros(Bool, (3,num_cases))
-    
-    Threads.@threads for i in 1:num_cases
-        x0_d = Vector(x0_s)
-        # Dynamic
-        x_d, drdx_d, converged_d = newtonsolve(rf_solution!, x0_d; tol=tol)
-        r_check = similar(x0_d)
-        checks_dynamic[1,i] = converged_d
-        checks_dynamic[2,i] = isapprox(rf_solution!(r_check, x_d), zero(r_check); atol=tol)
-        checks_dynamic[3,i] = (drdx_d ≈ ForwardDiff.jacobian(rf_solution!, r_check, x_d))
+    for linsolver in (Newton.StandardLinsolver(), Newton.UnsafeFastLinsolver(), VERSION ≥ v"1.11" ? Newton.RecursiveFactorizationLinsolver() : nothing)
+        linsolver === nothing && continue
+        checks_dynamic = zeros(Bool, (3,num_cases))
+        checks_static = zeros(Bool, (3,num_cases))
+        Threads.@threads for i in 1:num_cases
+            x0_d = Vector(x0_s)
+            # Dynamic
+            cache = NewtonCache(x0_d; linsolver)
+            x_d, drdx_d, converged_d = newtonsolve(rf_solution!, x0_d; tol=tol)
+            r_check = similar(x0_d)
+            checks_dynamic[1,i] = converged_d
+            checks_dynamic[2,i] = isapprox(rf_solution!(r_check, x_d), zero(r_check); atol=tol)
+            checks_dynamic[3,i] = (drdx_d ≈ ForwardDiff.jacobian(rf_solution!, r_check, x_d))
 
-        # Static
-        x_s, drdx_s, converged_s = newtonsolve(rf_solution, x0_s; tol=tol)
-        checks_static[1,i] = converged_s
-        checks_static[2,i] = isapprox(norm(rf_solution(x_s)), 0.0, atol=tol)
-        checks_static[3,i] = (drdx_s ≈ ForwardDiff.jacobian(rf_solution, x_s))
+            # Static
+            if linsolver isa Union{Newton.StandardLinsolver, Newton.UnsafeFastLinsolver}    
+                x_s, drdx_s, converged_s = newtonsolve(rf_solution, x0_s; tol=tol)
+                checks_static[1,i] = converged_s
+                checks_static[2,i] = isapprox(norm(rf_solution(x_s)), 0.0, atol=tol)
+                checks_static[3,i] = (drdx_s ≈ ForwardDiff.jacobian(rf_solution, x_s))
+            else
+                checks_static[:, i] .= true
+            end
+        end
+        @test all(checks_dynamic)
+        @test all(checks_static)
     end
-    @test all(checks_dynamic)
-    @test all(checks_static)
 end
