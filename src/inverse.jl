@@ -188,7 +188,7 @@ and fall back to generic `LinearAlgebra.inv`
 
     @inbounds begin
         if n == 1
-            K .= 1 / K[1,1]
+            K .= sinv(SMatrix{1, 1}(K))
         elseif n == 2
             K .= sinv(SMatrix{2, 2}(K))
         elseif n == 3

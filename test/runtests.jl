@@ -5,6 +5,11 @@ using LinearAlgebra
 using StaticArrays
 using Tensors
 using Test
+
+# Test error msg with extensions before loading extension packages
+@test_throws ErrorException Newton.RecursiveFactorizationLinsolver()
+@test_throws "using RecursiveFactorization" Newton.RecursiveFactorizationLinsolver()
+
 using RecursiveFactorization
 
 if !Newton.LOGGING    

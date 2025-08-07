@@ -6,11 +6,11 @@
         )
         linsolver === nothing && continue
         for n in (10, 25)
-            A = 2*I + rand(10,10)
-            b = rand(10)
-            A1, A2 = [copy(A) for _ in 1:2]
-            b1, b2 = [copy(b) for _ in 1:2]
-            @test A1\b1 ≈ Newton.linsolve!(A2, b2, NewtonCache(b; linsolver))
+            A = 2*I + rand(n, n)
+            b = rand(n)
+            Ac = copy(A)
+            bc = copy(b)
+            @test Ac\bc ≈ Newton.linsolve!(A, b, NewtonCache(b; linsolver))
         end
     end
 end
