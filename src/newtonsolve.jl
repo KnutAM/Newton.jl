@@ -31,7 +31,7 @@ function newtonsolve(rf!::F, x0::AbstractVector, cache::NewtonCache = NewtonCach
         @if_logging push!(resids, copy(r))
 
         check_no_dual(err) # Check that we don't try to differentiate (gets compiled away for type-stable code)
-        if err < tol
+        if real(err) < tol
             return x, drdx, true
         end
         minus_dx = linsolve!(drdx, r, cache)    # minus_dx aliases r
