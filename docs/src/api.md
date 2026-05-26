@@ -8,6 +8,13 @@ CurrentModule = Newton
 newtonsolve
 NewtonCache
 getx
+```
+
+### Logging features
+```@docs
+Newton.NoLogger
+Newton.StandardLogger
+Newton.FullLogger
 Newton.logging_mode
 ```
 
@@ -73,4 +80,7 @@ Newton.linsolve!
 Newton.linsolve
 Newton.extract_submatrix
 Newton.join_submatrices
+Newton.reset_logger!
+Newton.update_logger!
+Newton.report_logger
 ```

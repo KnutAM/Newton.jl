@@ -19,7 +19,8 @@ if !Newton.LOGGING
     include("test_ad_in_residual.jl")
     include("test_ad_solver.jl")
     include("test_deprecated.jl")
+    include("test_logging.jl")
 else
-    include("test_logging.jl")      # Specific checks
+    include("test_logging.jl")
     include("test_newtonsolver.jl") # Integration tests are done also in logging mode. 
 end
