@@ -34,13 +34,14 @@ end
         r = rf(SVector((x[1,1], x[2,2])))
         return SymmetricTensor{2,2}((r[1], r[2], x[2,1]))
     end
+    rf(x::Tensor{2,1}) = Tensor{2,1}((rf(x[1,1]),))
     rf(x::Number) = 1 - x^2 + x
     residuals(l::Newton.StandardLogger) = l.residuals
     residuals(l::Newton.FullLogger) = norm.(l.residuals)
     last_residual(l::Newton.StandardLogger) = last(l.residuals)
     last_residual(l::Newton.FullLogger) = norm(last(l.residuals))
 
-    for x0 in (rand(2), rand(SVector{2}), rand(Vec{2}), rand(SymmetricTensor{2,2}), rand())
+    for x0 in (rand(2), rand(SVector{2}), rand(Vec{2}), rand(SymmetricTensor{2,2}), rand(), rand(Tensor{2,1}))
         log_msgs = Vector{String}[]
         for Logger in (Newton.StandardLogger, Newton.FullLogger)
             logger = Logger(x0)
